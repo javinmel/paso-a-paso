@@ -8,7 +8,6 @@ function Onboarding({ onFamiliaCreada }) {
   const [rolAdmin, setRolAdmin] = useState('Papá');
   const [nombreUsuario, setNombreUsuario] = useState('');
   
-  // Nuevos estados para unirse eligiendo rol
   const [rolUnido, setRolUnido] = useState('Mamá');
   const [nombreUnido, setNombreUnido] = useState('');
 
@@ -28,8 +27,7 @@ function Onboarding({ onFamiliaCreada }) {
     const familiaSlug = nombreFamilia.trim().toLowerCase();
     const adminNombre = nombreUsuario.trim();
 
-    // 1. Verificar si el hogar ya existe
-    const { data: hogarExistente, error: errCheck } = await supabase
+    const { data: hogarExistente } = await supabase
       .from('familias')
       .select('*')
       .eq('nombre_familia', familiaSlug)
@@ -41,7 +39,6 @@ function Onboarding({ onFamiliaCreada }) {
       return;
     }
 
-    // 2. Crear el hogar en Supabase
     const { error: errFam } = await supabase.from('familias').insert([{
       nombre_familia: familiaSlug,
       administrador: adminNombre,
@@ -54,12 +51,10 @@ function Onboarding({ onFamiliaCreada }) {
       return;
     }
 
-    // 3. Registrar al administrador en la tabla miembros
     await supabase.from('miembros').upsert([{
       familia: familiaSlug,
       nombre: adminNombre,
-      rol: 'admin',
-      tipo_rol: rolAdmin
+      rol: rolAdmin
     }], { onConflict: 'familia,nombre' });
 
     setCargando(false);
@@ -83,7 +78,6 @@ function Onboarding({ onFamiliaCreada }) {
     const familiaSlug = nombreFamilia.trim().toLowerCase();
     const nombreClean = nombreUnido.trim();
 
-    // 1. Verificar si el hogar existe
     const { data: hogarExistente } = await supabase
       .from('familias')
       .select('*')
@@ -96,15 +90,10 @@ function Onboarding({ onFamiliaCreada }) {
       return;
     }
 
-    // 2. Determinar si el rol seleccionado es administrador secundario o hijo
-    const esRolAdminSecundario = ['Papá', 'Mamá'].includes(rolUnido);
-
-    // 3. Registrar al miembro en la base de datos
     const { error: errMemb } = await supabase.from('miembros').upsert([{
       familia: familiaSlug,
       nombre: nombreClean,
-      rol: esRolAdminSecundario ? 'admin_secundario' : 'hijo',
-      tipo_rol: rolUnido
+      rol: rolUnido
     }], { onConflict: 'familia,nombre' });
 
     if (errMemb) {

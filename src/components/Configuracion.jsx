@@ -9,7 +9,6 @@ function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion
       </div>
 
       <div className="tab-content" style={{ textAlign: 'left' }}>
-        {/* Tarjeta principal del hogar */}
         <div style={{
           background: '#2b2d42',
           color: '#fff',
@@ -23,15 +22,14 @@ function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion
           <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>Comparte este nombre para que otros se unan</p>
         </div>
 
-        {/* Listado dinámico de miembros del hogar */}
         <div style={{ marginBottom: '24px' }}>
           <h4 style={{ fontSize: '15px', color: '#423267', marginBottom: '10px' }}>
             Miembros del hogar ({miembrosHogars.length})
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {miembrosHogars.map((m) => {
-              const esAdmin = m.rol === 'admin' || m.rol === 'admin_secundario';
-              const etiquetaRol = m.tipo_rol || (esAdmin ? 'Administrador' : 'Hijo');
+              const rolStr = m.rol || 'Miembro';
+              const esAdmin = m.nombre === familia?.administrador || ['Papá', 'Mamá'].includes(rolStr);
               return (
                 <div key={m.id || m.nombre} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8f9fc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <span style={{
@@ -44,7 +42,7 @@ function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion
                   <div style={{ flex: 1 }}>
                     <strong style={{ display: 'block', fontSize: '14px', color: '#1e293b' }}>{m.nombre}</strong>
                     <span style={{ fontSize: '12px', color: '#64748b' }}>
-                      Rol: {etiquetaRol}
+                      Rol: {rolStr}
                     </span>
                   </div>
                   <span style={{ fontSize: '11px', background: '#e2e8f0', padding: '3px 8px', borderRadius: '6px', color: '#475569' }}>
@@ -56,7 +54,6 @@ function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion
           </div>
         </div>
 
-        {/* Botones de acción */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
           <button type="button" className="btn-action-main" onClick={onCambiarHogar} style={{ backgroundColor: '#2563eb', color: '#fff' }}>
             🔄 Cambiar de hogar
