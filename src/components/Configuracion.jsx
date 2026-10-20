@@ -30,7 +30,8 @@ function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {miembrosHogars.map((m) => {
-              const esAdmin = m.rol === 'admin';
+              const esAdmin = m.rol === 'admin' || m.rol === 'admin_secundario';
+              const etiquetaRol = m.tipo_rol || (esAdmin ? 'Administrador' : 'Hijo');
               return (
                 <div key={m.id || m.nombre} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8f9fc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <span style={{
@@ -43,11 +44,11 @@ function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion
                   <div style={{ flex: 1 }}>
                     <strong style={{ display: 'block', fontSize: '14px', color: '#1e293b' }}>{m.nombre}</strong>
                     <span style={{ fontSize: '12px', color: '#64748b' }}>
-                      {esAdmin ? `Administrador (${familia?.rolAdmin || 'Papá/Mamá'})` : 'Hijo / Miembro'}
+                      Rol: {etiquetaRol}
                     </span>
                   </div>
                   <span style={{ fontSize: '11px', background: '#e2e8f0', padding: '3px 8px', borderRadius: '6px', color: '#475569' }}>
-                    {esAdmin ? '👑 Admin' : '🧒 Hijo'}
+                    {esAdmin ? '👑 Admin' : '🧒 Miembro'}
                   </span>
                 </div>
               );

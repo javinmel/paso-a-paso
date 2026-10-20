@@ -5,8 +5,13 @@ import { supabase } from '../supabaseClient';
 function Onboarding({ onFamiliaCreada }) {
   const [paso, setPaso] = useState('inicio'); // 'inicio', 'crear', 'unir'
   const [nombreFamilia, setNombreFamilia] = useState('');
-  const [rol, setRol] = useState('Papá');
+  const [rolAdmin, setRolAdmin] = useState('Papá');
   const [nombreUsuario, setNombreUsuario] = useState('');
+  
+  // Nuevos estados para unirse eligiendo rol
+  const [rolUnido, setRolUnido] = useState('Mamá');
+  const [nombreUnido, setNombreUnido] = useState('');
+
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
 
@@ -21,51 +26,53 @@ function Onboarding({ onFamiliaCreada }) {
     setError('');
 
     const familiaSlug = nombreFamilia.trim().toLowerCase();
+    const adminNombre = nombreUsuario.trim();
 
-    // 1. Verificar si el hogar ya existe en Supabase
-    const { data: hogarExistente } = await supabase
+    // 1. Verificar si el hogar ya existe
+    const { data: hogarExistente, error: errCheck } = await supabase
       .from('familias')
       .select('*')
       .eq('nombre_familia', familiaSlug)
-      .single();
+      .maybeSingle();
 
     if (hogarExistente) {
       setCargando(false);
-      setError(`El hogar "${nombreFamilia}" ya existe y tiene un administrador. Usa la opción "Unirme a un Hogar".`);
+      setError(`El hogar "${nombreFamilia}" ya existe. Usa la opción "Unirme a un Hogar".`);
       return;
     }
 
-    // 2. Crear el hogar
+    // 2. Crear el hogar en Supabase
     const { error: errFam } = await supabase.from('familias').insert([{
       nombre_familia: familiaSlug,
-      administrador: nombreUsuario.trim(),
-      rol_admin: rol
+      administrador: adminNombre,
+      rol_admin: rolAdmin
     }]);
 
     if (errFam) {
       setCargando(false);
-      setError('Error al crear el hogar. Intenta de nuevo.');
+      setError(`Error al crear hogar: ${errFam.message}`);
       return;
     }
 
-    // 3. Registrar al administrador como primer miembro
-    await supabase.from('miembros').insert([{
+    // 3. Registrar al administrador en la tabla miembros
+    await supabase.from('miembros').upsert([{
       familia: familiaSlug,
-      nombre: nombreUsuario.trim(),
-      rol: 'admin'
-    }]);
+      nombre: adminNombre,
+      rol: 'admin',
+      tipo_rol: rolAdmin
+    }], { onConflict: 'familia,nombre' });
 
     setCargando(false);
     onFamiliaCreada({
       nombreFamilia: familiaSlug,
-      administrador: nombreUsuario.trim(),
-      rolAdmin: rol
-    }, nombreUsuario.trim());
+      administrador: adminNombre,
+      rolAdmin: rolAdmin
+    }, adminNombre);
   };
 
   const manejarUnión = async (e) => {
     e.preventDefault();
-    if (!nombreFamilia.trim() || !nombreUsuario.trim()) {
+    if (!nombreFamilia.trim() || !nombreUnido.trim()) {
       setError('Por favor escribe el nombre del hogar y tu nombre.');
       return;
     }
@@ -74,14 +81,14 @@ function Onboarding({ onFamiliaCreada }) {
     setError('');
 
     const familiaSlug = nombreFamilia.trim().toLowerCase();
-    const nombreClean = nombreUsuario.trim();
+    const nombreClean = nombreUnido.trim();
 
     // 1. Verificar si el hogar existe
     const { data: hogarExistente } = await supabase
       .from('familias')
       .select('*')
       .eq('nombre_familia', familiaSlug)
-      .single();
+      .maybeSingle();
 
     if (!hogarExistente) {
       setCargando(false);
@@ -89,19 +96,22 @@ function Onboarding({ onFamiliaCreada }) {
       return;
     }
 
-    // 2. Validar si intentan usar el nombre del administrador por error
-    if (nombreClean.toLowerCase() === hogarExistente.administrador.toLowerCase()) {
-      setCargando(false);
-      setError('Este nombre ya está registrado como Administrador de este hogar. Si eres el administrador, usa el mismo dispositivo o recupera sesión.');
-      return;
-    }
+    // 2. Determinar si el rol seleccionado es administrador secundario o hijo
+    const esRolAdminSecundario = ['Papá', 'Mamá'].includes(rolUnido);
 
-    // 3. Registrar al hijo/miembro en la tabla miembros (si ya existe, solo entra)
-    await supabase.from('miembros').upsert([{
+    // 3. Registrar al miembro en la base de datos
+    const { error: errMemb } = await supabase.from('miembros').upsert([{
       familia: familiaSlug,
       nombre: nombreClean,
-      rol: 'hijo'
+      rol: esRolAdminSecundario ? 'admin_secundario' : 'hijo',
+      tipo_rol: rolUnido
     }], { onConflict: 'familia,nombre' });
+
+    if (errMemb) {
+      setCargando(false);
+      setError(`Error al unirse: ${errMemb.message}`);
+      return;
+    }
 
     setCargando(false);
     onFamiliaCreada({
@@ -146,14 +156,14 @@ function Onboarding({ onFamiliaCreada }) {
             <label className="field-label">Tu Rol</label>
             <select
               className="select-custom"
-              value={rol}
-              onChange={(e) => setRol(e.target.value)}
+              value={rolAdmin}
+              onChange={(e) => setRolAdmin(e.target.value)}
             >
               <option value="Papá">Papá 👨‍🦰</option>
               <option value="Mamá">Mamá 👩‍🦰</option>
             </select>
 
-            <label className="field-label">Tu Nombre (Administrador)</label>
+            <label className="field-label">Tu Nombre</label>
             <input
               type="text"
               className="input-custom"
@@ -170,7 +180,7 @@ function Onboarding({ onFamiliaCreada }) {
                 Volver
               </button>
               <button type="submit" className="btn-confirmar" disabled={cargando}>
-                {cargando ? 'Verificando...' : '¡Comenzar! ✨'}
+                {cargando ? 'Creando...' : '¡Comenzar! ✨'}
               </button>
             </div>
           </form>
@@ -190,13 +200,24 @@ function Onboarding({ onFamiliaCreada }) {
               required
             />
 
-            <label className="field-label">Tu Nombre (Ej: Sofía)</label>
+            <label className="field-label">¿Cuál es tu rol en el hogar?</label>
+            <select
+              className="select-custom"
+              value={rolUnido}
+              onChange={(e) => setRolUnido(e.target.value)}
+            >
+              <option value="Mamá">Mamá 👩‍🦰</option>
+              <option value="Papá">Papá 👨‍🦰</option>
+              <option value="Hijo">Hijo / Hija 🧒</option>
+            </select>
+
+            <label className="field-label">Tu Nombre (Ej: Sofía o Ana)</label>
             <input
               type="text"
               className="input-custom"
               placeholder="Ej: Sofía"
-              value={nombreUsuario}
-              onChange={(e) => setNombreUsuario(e.target.value)}
+              value={nombreUnido}
+              onChange={(e) => setNombreUnido(e.target.value)}
               required
             />
 
