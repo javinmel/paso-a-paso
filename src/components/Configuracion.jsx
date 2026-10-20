@@ -1,6 +1,8 @@
 import React from 'react';
 
 function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion, onVolver }) {
+  const miembros = miembrosHogars || [];
+
   return (
     <div className="spiritual-panel">
       <div className="panel-title-row">
@@ -24,10 +26,10 @@ function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion
 
         <div style={{ marginBottom: '24px' }}>
           <h4 style={{ fontSize: '15px', color: '#423267', marginBottom: '10px' }}>
-            Miembros del hogar ({miembrosHogars.length})
+            Miembros del hogar ({miembros.length})
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {miembrosHogars.map((m) => {
+            {miembros.map((m) => {
               const rolStr = m.rol || 'Miembro';
               const esAdmin = m.nombre === familia?.administrador || ['Papá', 'Mamá'].includes(rolStr);
               return (

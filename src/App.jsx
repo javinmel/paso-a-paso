@@ -178,7 +178,10 @@ function App() {
   const [nuevoTipo, setNuevoTipo] = useState('espiritual');
 
   const esAdministrador = familia && (nombre === familia.administrador);
-  const listaHijos = miembrosHogar.filter(m => m.rol === 'hijo').map(m => m.nombre);
+  const listaHijos = miembrosHogar.filter(m => 
+  m.nombre !== familia?.administrador && 
+  !['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(m.rol)
+).map(m => m.nombre);
 
   useEffect(() => {
     if (!familia) return;
