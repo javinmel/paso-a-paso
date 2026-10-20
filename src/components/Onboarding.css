@@ -1,0 +1,100 @@
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #e8dff5 0%, #fce1e4 50%, #fcf4dd 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 16px;
+}
+
+.onboarding-card {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 28px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  box-shadow: 0 20px 35px -10px rgba(126, 105, 248, 0.25);
+  animation: modalScale 0.25s ease-in-out;
+}
+
+.onboarding-icon {
+  font-size: 40px;
+  background-color: #ede8ff;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 4px;
+}
+
+.onboarding-card h2 {
+  font-size: 20px;
+  color: #423267;
+  font-weight: 800;
+}
+
+.onboarding-card p {
+  font-size: 13px;
+  color: #736298;
+  line-height: 1.4;
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.btn-primary-custom {
+  background-color: #7e69f8;
+  color: #ffffff;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(126, 105, 248, 0.3);
+  transition: transform 0.15s;
+}
+
+.btn-primary-custom:active { transform: scale(0.98); }
+
+.onboarding-hint {
+  font-size: 11px !important;
+  color: #a294c3 !important;
+  font-style: italic;
+}
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+}
+
+.onboarding-form h3 {
+  font-size: 16px;
+  color: #423267;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
