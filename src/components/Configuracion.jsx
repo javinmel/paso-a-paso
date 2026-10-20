@@ -1,7 +1,8 @@
 import React from 'react';
 
-function Configuracion({ familia, miembrosHogars, onCambiarHogar, onCerrarSesion, onVolver }) {
+function Configuracion({ familia, miembrosHogars = [], onCambiarHogar, onCerrarSesion, onVolver }) {
   const miembros = miembrosHogars || [];
+  // ... resto del código
 
   return (
     <div className="spiritual-panel">

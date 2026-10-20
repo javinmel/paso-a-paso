@@ -422,11 +422,13 @@ function App() {
         </div>
       </header>
 
-    {/* MÓDULO DE CONFIGURACIÓN SEPARADO */}
+  {/* MÓDULO DE CONFIGURACIÓN SEPARADO */}
       {currentView === 'config' && (
         <Configuracion 
           familia={familia}
-          miembrosHogars={miembrosHogar}  // <--- Corregido a miembrosHogar
+          miembrosHogars={miembrosHogars} 
+          // O cámbiala directamente a:
+          // miembrosHogars={miembrosHogar}
           onCambiarHogar={cambiarHogar}
           onCerrarSesion={cerrarSesion}
           onVolver={() => setCurrentView('home')}
