@@ -593,7 +593,7 @@ function App() {
         </>
       )}
 
-      {/* VISTA DE DEBERES / ASIGNACIÓN */}
+     {/* VISTA DE DEBERES / ASIGNACIÓN */}
       {currentView === 'tareas' && (
         <div className="tasks-board-section">
           <div className="tasks-board-header">
@@ -607,79 +607,182 @@ function App() {
             </div>
           )}
 
-          <div className="tasks-grid-container">
-            {tareasDeberes.map(tarea => {
-              const esSuTareaCreada = tarea.origen !== 'padres';
-              const puedeBorrar = esAdministrador || esSuTareaCreada;
+          {esAdministrador ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+              {listaHijos.length === 0 ? (
+                <p className="duties-empty">Aún no hay hijos registrados en este hogar.</p>
+              ) : (
+                listaHijos.map(hijo => {
+                  const tareasHijo = tareasDeberes.filter(t => t.para === hijo || t.para === 'todos');
+                  return (
+                    <div key={hijo} style={{ background: '#f8f9fc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#423267' }}>Deberes asignados</span>
+                        <span style={{ fontSize: '12px', background: '#ede8ff', color: '#7e69f8', padding: '3px 10px', borderRadius: '999px', fontWeight: '800' }}>
+                          🧒 {hijo}
+                        </span>
+                      </div>
+                      
+                      {tareasHijo.length === 0 ? (
+                        <p style={{ fontSize: '12px', color: '#736298', fontStyle: 'italic' }}>Sin deberes asignados para este hijo</p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {tareasHijo.map(tarea => (
+                            <div key={tarea.id} className="task-item-card" style={{ padding: '12px 14px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px', background: '#fff', border: '1px solid #e2e8f0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                                <span className="task-text" style={{ fontSize: '14px', fontWeight: '700', flex: 1, color: '#3f315e' }}>{tarea.texto}</span>
+                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: '0' }}>
+                                  <span className={`task-badge ${tarea.estado}`} style={{ fontSize: '11px', fontWeight: 'bold' }}>
+                                    {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
+                                  </span>
+                                  <span style={{ fontSize: '10px', color: '#736298', background: '#f1f5f9', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }}>
+                                    {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
+                                  </span>
+                                </div>
+                              </div>
 
-              return (
-                <div key={tarea.id} className={`task-item-card ${tarea.estado}`}>
-                  <div className="task-info">
-                    <span className="task-text">{tarea.texto}</span>
-                    <span className="task-origin">
-                      {tarea.origen === 'padres' ? '👨‍👩‍👧 Asignada por papá o mamá' : '🧒 Creada por ti'}
-                    </span>
-                    {tarea.evidencia_url && (
-                      <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
-                        📷 Ver foto de evidencia subida
-                      </a>
-                    )}
-                    <span className={`task-badge ${tarea.estado}`}>
-                      {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
-                    </span>
-                  </div>
+                              {tarea.evidencia_url && (
+                                <div>
+                                  <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
+                                    📷 Ver foto de evidencia subida
+                                  </a>
+                                </div>
+                              )}
 
-                  <div className="task-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button 
-                      type="button"
-                      className={`task-toggle-btn ${tarea.estado}`}
-                      onClick={async () => {
-                        const nuevoEstado = tarea.estado === 'realizado' ? 'pendiente' : 'realizado';
-                        setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t));
-                        await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
-                      }}
-                    >
-                      {tarea.estado === 'realizado' ? 'Marcar Pendiente' : 'Marcar Hecho'}
-                    </button>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button 
+                                  type="button"
+                                  className={`task-toggle-btn ${tarea.estado}`}
+                                  style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
+                                  onClick={async () => {
+                                    const nuevoEstado = tarea.estado === 'realizado' ? 'pendiente' : 'realizado';
+                                    setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t));
+                                    await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
+                                  }}
+                                >
+                                  {tarea.estado === 'realizado' ? 'Marcar Pendiente' : 'Marcar Hecho'}
+                                </button>
+                                <button type="button" className="task-delete-btn" onClick={() => eliminarTarea(tarea.id)} aria-label="Eliminar deber">✕</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            <div className="tasks-grid-container" style={{ marginTop: '8px' }}>
+              {tareasVisibles.length === 0 ? (
+                <p className="duties-empty">Aún no tienes deberes. Agrégalos o pídele a tus papás que te asignen 🌱</p>
+              ) : (
+                tareasVisibles.map(tarea => {
+                  const esSuTareaCreada = tarea.origen !== 'padres';
+                  const puedeBorrar = esAdministrador || esSuTareaCreada;
 
-                    {/* Subir foto de evidencia */}
-                    <label style={{ cursor: 'pointer', fontSize: '16px', background: '#ede8ff', padding: '6px', borderRadius: '8px' }} title="Subir foto de evidencia">
-                      📷
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        style={{ display: 'none' }} 
-                        onChange={async (e) => {
-                          const archivo = e.target.files[0];
-                          if (!archivo) return;
-                          const lector = new FileReader();
-                          lector.onload = async (uploadEv) => {
-                            const urlBase64 = uploadEv.target.result;
-                            await supabase.from('tareas').update({ evidencia_url: urlBase64 }).eq('id', tarea.id);
-                            setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlBase64 } : t));
-                            alert('¡Foto de evidencia guardada con éxito!');
-                          };
-                          lector.readAsDataURL(archivo);
-                        }}
-                      />
-                    </label>
+                  return (
+                    <div key={tarea.id} className="task-item-card" style={{ padding: '14px', borderRadius: '14px', display: 'flex', flexDirection: 'column', gap: '10px', background: '#fbf9ff', border: '1px solid #ebdffc' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                        <span className="task-text" style={{ fontSize: '14px', fontWeight: '700', flex: 1, color: '#3f315e' }}>{tarea.texto}</span>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                          <span className={`task-badge ${tarea.estado}`} style={{ fontSize: '11px', fontWeight: 'bold' }}>
+                            {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
+                          </span>
+                          <span style={{ fontSize: '10px', color: '#736298', background: '#ede8ff', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }}>
+                            {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
+                          </span>
+                        </div>
+                      </div>
 
-                    {puedeBorrar && (
-                      <button type="button" className="task-delete-btn" onClick={() => eliminarTarea(tarea.id)} aria-label="Eliminar deber">✕</button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                      {tarea.evidencia_url && (
+                        <div>
+                          <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
+                            📷 Ver foto de evidencia subida
+                          </a>
+                        </div>
+                      )}
 
-          <form className="add-task-form" onSubmit={agregarTarea}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <button 
+                            type="button"
+                            className={`task-toggle-btn ${tarea.estado}`}
+                            style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
+                            onClick={async () => {
+                              const nuevoEstado = tarea.estado === 'realizado' ? 'pendiente' : 'realizado';
+                              setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t));
+                              await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
+                            }}
+                          >
+                            {tarea.estado === 'realizado' ? 'Marcar Pendiente' : 'Marcar Hecho'}
+                          </button>
+
+                          {/* Opción 1: Tomar foto con la cámara */}
+                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ede8ff', color: '#7e69f8', padding: '6px 10px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            📷 Tomar foto
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              capture="environment"
+                              style={{ display: 'none' }} 
+                              onChange={async (e) => {
+                                const archivo = e.target.files[0];
+                                if (!archivo) return;
+                                const lector = new FileReader();
+                                lector.onload = async (uploadEv) => {
+                                  const urlBase64 = uploadEv.target.result;
+                                  await supabase.from('tareas').update({ evidencia_url: urlBase64 }).eq('id', tarea.id);
+                                  setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlBase64 } : t));
+                                  alert('¡Foto tomada y guardada con éxito!');
+                                };
+                                lector.readAsDataURL(archivo);
+                              }}
+                            />
+                          </label>
+
+                          {/* Opción 2: Buscar en la galería */}
+                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#f1f5f9', color: '#475569', padding: '6px 10px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            🖼️ Galería
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              style={{ display: 'none' }} 
+                              onChange={async (e) => {
+                                const archivo = e.target.files[0];
+                                if (!archivo) return;
+                                const lector = new FileReader();
+                                lector.onload = async (uploadEv) => {
+                                  const urlBase64 = uploadEv.target.result;
+                                  await supabase.from('tareas').update({ evidencia_url: urlBase64 }).eq('id', tarea.id);
+                                  setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlBase64 } : t));
+                                  alert('¡Imagen de galería cargada con éxito!');
+                                };
+                                lector.readAsDataURL(archivo);
+                              }}
+                            />
+                          </label>
+                        </div>
+
+                        {puedeBorrar && (
+                          <button type="button" className="task-delete-btn" onClick={() => eliminarTarea(tarea.id)} aria-label="Eliminar deber">✕</button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '14px' }}>
             <input
               type="text"
               className="input-custom"
               placeholder={esAdministrador ? "Escribe la tarea para tus hijos..." : "Nuevo deber (Ej: Ordenar mi cuarto)"}
               value={nuevaTarea}
-              onChange={(e) => setNuevaTarea(e.target.value)}
+              onChange={(e) => setNuevaTag ? setNuevaTarea(e.target.value) : setNuevaTarea(e.target.value)}
             />
             <button type="submit" className="btn-add-event">+ Agregar</button>
             {esAdministrador && (
