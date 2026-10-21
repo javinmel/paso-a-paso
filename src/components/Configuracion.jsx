@@ -45,7 +45,7 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
   };
 
   return (
-    <div className="config-panel" style={{ width: '100%', maxWidth: '750px', margin: '0 auto', boxSizing: 'border-box', padding: '20px' }}>
+    <div className="config-panel" style={{ width: '100%', maxWidth: '100%', margin: '0 auto', boxSizing: 'border-box', padding: '8px' }}>
       <div className="config-hogar" style={{ width: '100%', boxSizing: 'border-box', marginBottom: '20px' }}>
         <span className="config-hogar-label">Tu hogar</span>
         <h2>{nombreBonito(familia?.nombreFamilia)}</h2>
@@ -62,13 +62,13 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
             {lista.map((m) => {
               const admin = esRolAdmin(m.rol);
               return (
-                <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`} style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8f9fc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`} style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: '#f8f9fc', borderRadius: '12px', border: '1px solid #e2e8f0', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
                     <span className="config-avatar" style={{ width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: admin ? '#7e69f8' : '#cbd5e1', color: admin ? '#fff' : '#1e293b', borderRadius: '50%', fontWeight: 'bold', flexShrink: 0 }}>
                       {(m.nombre || 'U')[0].toUpperCase()}
                     </span>
                     <div className="config-miembro-info" style={{ minWidth: 0, flex: 1 }}>
-                      <strong style={{ display: 'block', fontSize: '14px', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <strong style={{ display: 'block', fontSize: '15px', color: '#1e293b', wordBreak: 'break-word', whiteSpace: 'normal' }}>
                         {m.nombre}
                         {m.nombre === usuarioActivo && <em> (tú)</em>}
                       </strong>
@@ -76,8 +76,8 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                    {admin && <span className="config-badge admin" style={{ fontSize: '11px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', color: '#475569' }}>👑 Administrador</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    {admin && <span className="config-badge admin" style={{ fontSize: '11px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', color: '#475569', whiteSpace: 'nowrap' }}>Administrador</span>}
                     {esAdminActual && (
                       <button 
                         type="button" 
@@ -90,10 +90,11 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
                           borderRadius: '8px',
                           cursor: 'pointer',
                           fontSize: '12px',
-                          fontWeight: 'bold'
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap'
                         }}
                       >
-                        🗑️ Borrar
+                        Borrar
                       </button>
                     )}
                   </div>
@@ -105,12 +106,12 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
       </section>
 
       <div className="config-acciones" style={{ width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
-        <button type="button" className="config-btn cambiar" onClick={onCambiarHogar} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
-          🔄 Cambiar de hogar
+        <button type="button" className="config-btn cambiar" onClick={onCambiarHogar} style={{ width: '100%', boxSizing: 'border-box', padding: '14px' }}>
+          Cambiar de hogar
         </button>
 
-        <button type="button" className="config-btn salir" onClick={onCerrarSesion} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
-          🚪 Cerrar sesión
+        <button type="button" className="config-btn salir" onClick={onCerrarSesion} style={{ width: '100%', boxSizing: 'border-box', padding: '14px' }}>
+          Cerrar sesión
         </button>
 
         {esAdminActual && (
@@ -118,9 +119,9 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
             type="button" 
             className="config-btn" 
             onClick={borrarHogar} 
-            style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+            style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}
           >
-            ⚠️ Borrar Hogar por Completo
+            Borrar Hogar por Completo
           </button>
         )}
       </div>
