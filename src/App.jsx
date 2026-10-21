@@ -147,6 +147,7 @@ function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isLejanaModalOpen, setIsLejanaModalOpen] = useState(false);
   const [pendingTask, setPendingTask] = useState('');
   const [currentChapterKey, setCurrentChapterKey] = useState(null);
 
@@ -166,6 +167,18 @@ function App() {
 
   const diaHoy = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
   const [diaSeleccionado, setDiaSeleccionado] = useState(diaHoy === 'Domingo' ? 'Lunes' : diaHoy);
+
+  // Estado para actividades lejanas
+  const [tituloLejana, setTituloLejana] = useState('');
+  const [fechaLejana, setFechaLejana] = useState(fechaHoy());
+  const [actividadesLejanas, setActividadesLejanas] = useState(() => {
+    try {
+      const l = localStorage.getItem('actividades_lejanas');
+      return l ? JSON.parse(l) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const diaDelMes = new Date().getDate();
   const fraseActual = bancoFrasesMensual[(diaDelMes - 1) % bancoFrasesMensual.length];
@@ -417,6 +430,23 @@ function App() {
   const eliminarEvento = async (id) => {
     setEventosAgenda(prev => prev.filter(ev => ev.id !== id));
     await supabase.from('agenda').delete().eq('id', id);
+  };
+
+  const agregarActividadLejana = (e) => {
+    e.preventDefault();
+    if (!tituloLejana.trim()) return;
+    const nuevaLejana = { id: Date.now(), titulo: tituloLejana.trim(), fecha: fechaLejana };
+    const actualizadas = [nuevaLejana, ...actividadesLejanas];
+    setActividadesLejanas(actualizadas);
+    localStorage.setItem('actividades_lejanas', JSON.stringify(actualizadas));
+    setTituloLejana('');
+    setIsLejanaModalOpen(false);
+  };
+
+  const eliminarActividadLejana = (id) => {
+    const actualizadas = actividadesLejanas.filter(a => a.id !== id);
+    setActividadesLejanas(actualizadas);
+    localStorage.setItem('actividades_lejanas', JSON.stringify(actualizadas));
   };
 
   const tableroEspiritual = (
@@ -857,15 +887,31 @@ function App() {
 
       {currentView === 'calendar' && (
         <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box', background: '#fdfcfe' }}>
-          <div className="panel-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-            <h3>📅 Agenda Familiar</h3>
+          
+          {/* Franja lila viva superior */}
+          <div style={{
+            background: 'linear-gradient(135deg, #a855f7 0%, #7e69f8 100%)',
+            padding: '12px 16px',
+            borderRadius: '16px',
+            color: '#ffffff',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '14px',
+            boxShadow: '0 4px 12px rgba(126, 105, 248, 0.25)'
+          }}>
+            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '800', margin: 0 }}>📅 Agenda Familiar</h3>
             {esAdministrador && (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button className="btn-add-event" onClick={() => setIsEventModalOpen(true)}>+ Nuevo Evento</button>
                 <button 
-                  className="btn-add-event" 
-                  style={{ backgroundColor: '#d97706', color: '#ffffff' }} 
-                  onClick={() => alert('🌟 Sección para agendar actividades lejanas y proyectos futuros.')}
+                  onClick={() => setIsEventModalOpen(true)}
+                  style={{ background: '#ffffff', color: '#7e69f8', border: 'none', padding: '6px 12px', borderRadius: '10px', fontWeight: '800', fontSize: '12px' }}
+                >
+                  + Nuevo Evento
+                </button>
+                <button 
+                  onClick={() => setIsLejanaModalOpen(true)}
+                  style={{ background: '#f59e0b', color: '#ffffff', border: 'none', padding: '6px 12px', borderRadius: '10px', fontWeight: '800', fontSize: '12px' }}
                 >
                   📅 Actividades Lejanas
                 </button>
@@ -914,13 +960,10 @@ function App() {
             })}
           </div>
 
-          <div style={{ marginBottom: '14px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>
-            Mostrando agenda semanal (Día activo destacado: <strong style={{ color: '#4f46e5' }}>{diaSeleccionado}</strong>)
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
+          {/* Cuadritos de eventos muy juntos */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
             {eventosAgenda.length === 0 ? (
-              <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
+              <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '25px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
                 No hay actividades programadas en la agenda. ¡Agrega la primera! 🌈
               </div>
             ) : (
@@ -950,25 +993,25 @@ function App() {
                     </div>
 
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', marginTop: '4px' }}>
                         <span style={{
                           fontSize: '10px',
                           background: esDelDiaSeleccionado ? (esEspiritual ? '#a7f3d0' : '#fecdd3') : '#f1f5f9',
                           color: esDelDiaSeleccionado ? (esEspiritual ? '#065f46' : '#9f1239') : '#475569',
-                          padding: '3px 9px',
-                          borderRadius: '8px',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
                           fontWeight: '800'
                         }}>
                           {esEspiritual ? 'Espiritual' : 'Hogar'}
                         </span>
                         <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#1f2937' : '#64748b', fontWeight: '800', marginRight: '16px' }}>{ev.dia}</span>
                       </div>
-                      <strong style={{ display: 'block', fontSize: '14px', color: '#1f2937', marginBottom: '4px', lineHeight: '1.3' }}>{ev.titulo}</strong>
+                      <strong style={{ display: 'block', fontSize: '13px', color: '#1f2937', marginBottom: '2px', lineHeight: '1.2' }}>{ev.titulo}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#4b5563', fontWeight: '700' }}>🕒 {ev.hora}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                      <span style={{ fontSize: '11px', color: '#4b5563', fontWeight: '700' }}>🕒 {ev.hora}</span>
                       {esAdministrador && (
-                        <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento" style={{ fontSize: '12px', padding: '2px 6px' }}>✕</button>
+                        <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento" style={{ fontSize: '11px', padding: '2px 6px' }}>✕</button>
                       )}
                     </div>
                   </div>
@@ -976,6 +1019,40 @@ function App() {
               })
             )}
           </div>
+
+          {/* SECCIÓN DE ACTIVIDADES LEJANAS EN LA PARTE INFERIOR (FUERA DEL CUADRO) */}
+          {actividadesLejanas.length > 0 && (
+            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <h4 style={{ fontSize: '14px', color: '#423267', fontWeight: '800', textAlign: 'left' }}>🌟 Actividades Lejanas y Proyectos</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {actividadesLejanas.map((act) => (
+                  <div key={act.id} style={{
+                    background: 'linear-gradient(135deg, #ede8ff 0%, #fef3c7 100%)',
+                    border: '1.5px solid #d8b4fe',
+                    padding: '10px 14px',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span>📌</span>
+                      <strong style={{ fontSize: '13px', color: '#3f315e' }}>{act.titulo}</strong>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '12px', background: '#ffffff', padding: '3px 8px', borderRadius: '8px', fontWeight: 'bold', color: '#7e69f8', border: '1px solid #ebdffc' }}>
+                        📅 {act.fecha}
+                      </span>
+                      {esAdministrador && (
+                        <button className="task-delete-btn" onClick={() => eliminarActividadLejana(act.id)} aria-label="Eliminar actividad">✕</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1087,6 +1164,7 @@ function App() {
         </div>
       )}
 
+      {/* MODAL NUEVO EVENTO */}
       {isEventModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -1105,6 +1183,39 @@ function App() {
               </select>
               <div className="modal-buttons">
                 <button type="button" className="btn-cancelar" onClick={() => setIsEventModalOpen(false)}>Cancelar</button>
+                <button type="submit" className="btn-confirmar">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ACTIVIDAD LEJANA */}
+      {isLejanaModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h3>Agendar Actividad Lejana</h3>
+            <form onSubmit={agregarActividadLejana} className="modal-form">
+              <input 
+                type="text" 
+                placeholder="Título del evento (Ej: Vacaciones)" 
+                value={tituloLejana} 
+                onChange={(e) => setTituloLejana(e.target.value)} 
+                className="input-custom" 
+                required 
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#736298' }}>Selecciona la fecha:</label>
+                <input 
+                  type="date" 
+                  value={fechaLejana} 
+                  onChange={(e) => setFechaLejana(e.target.value)} 
+                  className="input-custom" 
+                  required 
+                />
+              </div>
+              <div className="modal-buttons">
+                <button type="button" className="btn-cancelar" onClick={() => setIsLejanaModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn-confirmar">Guardar</button>
               </div>
             </form>
