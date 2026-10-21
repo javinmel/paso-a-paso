@@ -45,88 +45,92 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
   };
 
   return (
-    <div className="config-panel" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Cuadro superior "Tu hogar" ancho completo */}
-      <div className="config-hogar" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', margin: 0 }}>
-        <span className="config-hogar-label">Tu hogar</span>
-        <h2>{nombreBonito(familia?.nombreFamilia)}</h2>
-        <p>Comparte este nombre para que otros se unan</p>
-      </div>
+    <div style={{ width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', padding: '0 12px', boxSizing: 'border-box' }}>
+      <div className="config-panel" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        
+        {/* Cuadro superior "Tu hogar" ancho completo */}
+        <div className="config-hogar" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', margin: 0, borderRadius: '16px' }}>
+          <span className="config-hogar-label">Tu hogar</span>
+          <h2>{nombreBonito(familia?.nombreFamilia)}</h2>
+          <p>Comparte este nombre para que otros se unan</p>
+        </div>
 
-      {/* Cuadro de "Miembros del hogar" ancho completo */}
-      <section className="config-seccion" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', margin: 0, padding: '16px 12px' }}>
-        <h4 className="config-titulo" style={{ marginBottom: '12px' }}>Miembros del hogar ({lista.length})</h4>
+        {/* Cuadro de "Miembros del hogar" ancho completo */}
+        <section className="config-seccion" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', margin: 0, padding: '16px 14px', borderRadius: '16px' }}>
+          <h4 className="config-titulo" style={{ marginBottom: '12px' }}>Miembros del hogar ({lista.length})</h4>
 
-        {lista.length === 0 ? (
-          <p className="config-vacio">Aún no hay miembros en este hogar.</p>
-        ) : (
-          <ul className="config-miembros" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', padding: 0, margin: 0 }}>
-            {lista.map((m) => {
-              const admin = esRolAdmin(m.rol);
-              return (
-                <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`} style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: '#f8f9fc', borderRadius: '12px', border: '1px solid #e2e8f0', gap: '10px', margin: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-                    <span className="config-avatar" style={{ width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: admin ? '#7e69f8' : '#cbd5e1', color: admin ? '#fff' : '#1e293b', borderRadius: '50%', fontWeight: 'bold', flexShrink: 0 }}>
-                      {(m.nombre || 'U')[0].toUpperCase()}
-                    </span>
-                    <div className="config-miembro-info" style={{ minWidth: 0, flex: 1 }}>
-                      <strong style={{ display: 'block', fontSize: '15px', color: '#1e293b', wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                        {m.nombre}
-                        {m.nombre === usuarioActivo && <em> (tú)</em>}
-                      </strong>
-                      <small style={{ color: '#64748b', fontSize: '12px' }}>{etiquetaRol(m.rol)}</small>
+          {lista.length === 0 ? (
+            <p className="config-vacio">Aún no hay miembros en este hogar.</p>
+          ) : (
+            <ul className="config-miembros" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', padding: 0, margin: 0 }}>
+              {lista.map((m) => {
+                const admin = esRolAdmin(m.rol);
+                return (
+                  <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`} style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: '#f8f9fc', borderRadius: '12px', border: '1px solid #e2e8f0', gap: '10px', margin: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                      <span className="config-avatar" style={{ width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: admin ? '#7e69f8' : '#cbd5e1', color: admin ? '#fff' : '#1e293b', borderRadius: '50%', fontWeight: 'bold', flexShrink: 0 }}>
+                        {(m.nombre || 'U')[0].toUpperCase()}
+                      </span>
+                      <div className="config-miembro-info" style={{ minWidth: 0, flex: 1 }}>
+                        <strong style={{ display: 'block', fontSize: '15px', color: '#1e293b', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                          {m.nombre}
+                          {m.nombre === usuarioActivo && <em> (tú)</em>}
+                        </strong>
+                        <small style={{ color: '#64748b', fontSize: '12px' }}>{etiquetaRol(m.rol)}</small>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    {admin && <span className="config-badge admin" style={{ fontSize: '11px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', color: '#475569', whiteSpace: 'nowrap' }}>Administrador</span>}
-                    {esAdminActual && (
-                      <button 
-                        type="button" 
-                        onClick={() => borrarMiembro(m.nombre)}
-                        style={{
-                          background: '#fee2e2',
-                          color: '#dc2626',
-                          border: 'none',
-                          padding: '6px 10px',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        Borrar
-                      </button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      {admin && <span className="config-badge admin" style={{ fontSize: '11px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', color: '#475569', whiteSpace: 'nowrap' }}>Administrador</span>}
+                      {esAdminActual && (
+                        <button 
+                          type="button" 
+                          onClick={() => borrarMiembro(m.nombre)}
+                          style={{
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            padding: '6px 10px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Borrar
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
-      {/* Botones inferiores con su tamaño original compacto y centrados */}
-      <div className="config-acciones" style={{ width: '100%', maxWidth: '420px', margin: '16px auto 0 auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '12px', padding: '0' }}>
-        <button type="button" className="config-btn cambiar" onClick={onCambiarHogar} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
-          Cambiar de hogar
-        </button>
-
-        <button type="button" className="config-btn salir" onClick={onCerrarSesion} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
-          Cerrar sesión
-        </button>
-
-        {esAdminActual && (
-          <button 
-            type="button" 
-            className="config-btn" 
-            onClick={borrarHogar} 
-            style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            Borrar Hogar por Completo
+        {/* Botones inferiores con su tamaño original compacto y centrados */}
+        <div className="config-acciones" style={{ width: '100%', maxWidth: '420px', margin: '16px auto 0 auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '12px', padding: '0 10px' }}>
+          <button type="button" className="config-btn cambiar" onClick={onCambiarHogar} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
+            Cambiar de hogar
           </button>
-        )}
+
+          <button type="button" className="config-btn salir" onClick={onCerrarSesion} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
+            Cerrar sesión
+          </button>
+
+          {esAdminActual && (
+            <button 
+              type="button" 
+              className="config-btn" 
+              onClick={borrarHogar} 
+              style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Borrar Hogar por Completo
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );
