@@ -106,7 +106,7 @@ const recursosEmocion = {
   },
   enojo: {
     emoji: '⚡', etiqueta: 'Molesto',
-    titulo: 'Когда el enojo se siente muy fuerte',
+    titulo: 'Cuando el enojo se siente muy fuerte',
     mensaje: 'Sentir enojo no es malo; lo importante es qué hacemos con él. Una respuesta tranquila ayuda a que la paz vuelva al corazón.',
     ref: 'Proverbios 15:1',
     accion: 'Antes de hablar, cuenta hasta 10 y toma un poco de agua 💧',
@@ -156,6 +156,9 @@ function App() {
     try { return localStorage.getItem('nombre_usuario') ? JSON.parse(localStorage.getItem('nombre_usuario')) : 'Luis'; } catch { return 'Luis'; }
   });
 
+  const diaHoy = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
+  const [diaSeleccionado, setDiaSeleccionado] = useState(diaHoy === 'Domingo' ? 'Lunes' : diaHoy);
+
   const diaDelMes = new Date().getDate();
   const fraseActual = bancoFrasesMensual[(diaDelMes - 1) % bancoFrasesMensual.length];
   const saludoActual = saludos[diaDelMes % saludos.length];
@@ -170,7 +173,6 @@ function App() {
   const [miembrosHogar, setMiembrosHogar] = useState([]);
 
   const [nuevaTarea, setNuevaTarea] = useState('');
-  const [nuevoOrigen, setNuevoOrigen] = useState('padres');
   const [nuevoPara, setNuevoPara] = useState('todos');
   const [nuevoTitulo, setNuevoTitulo] = useState('');
   const [nuevoDia, setNuevoDia] = useState('Lunes');
@@ -280,7 +282,6 @@ function App() {
     ...tareasVisibles.filter(t => t.estado === 'realizado')
   ];
   
-  const diaHoy = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
   const eventosHoy = eventosAgenda.filter(ev => ev.dia === diaHoy);
 
   const mensajeProgreso = () => {
@@ -335,15 +336,6 @@ function App() {
       }]);
     }
     setIsModalOpen(false);
-  };
-
-  const toggleEstadoTarea = async (id) => {
-    const tarea = tareasDeberes.find(t => t.id === id);
-    if (!tarea) return;
-    const nuevoEstado = tarea.estado === 'pendiente' ? 'realizado' : 'pendiente';
-    
-    setTareasDeberes(prev => prev.map(t => t.id === id ? { ...t, estado: nuevoEstado } : t));
-    await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', id);
   };
 
   const agregarTarea = async (e) => {
@@ -445,6 +437,16 @@ function App() {
                   <p className="main-card-subtext">Supervisión de actividades y deberes del hogar</p>
                 </div>
               </div>
+
+              {/* Botón directo para ingresar a Configuración */}
+              <button 
+                type="button"
+                className="btn-action-main" 
+                onClick={() => setCurrentView('config')} 
+                style={{ backgroundColor: '#4f46e5', color: '#fff', marginBottom: '16px', borderRadius: '12px' }}
+              >
+                ⚙️ Configuración y Miembros del Hogar
+              </button>
 
               <div className="board-box">
                 <div className="board-title">👥 Estado de los Hijos</div>
@@ -630,31 +632,102 @@ function App() {
         </div>
       )}
 
-      {/* VISTA DE LA AGENDA FAMILIAR */}
+      {/* VISTA DE LA AGENDA FAMILIAR (REDESIGN CON CALENDARIO HORIZONTAL Y TARJETAS PASTEL) */}
       {currentView === 'calendar' && (
         <div className="spiritual-panel">
           <div className="panel-title-row">
-            <h3>📅 Horarios y Actividades</h3>
+            <h3>📅 Agenda Familiar</h3>
             {esAdministrador && (
               <button className="btn-add-event" onClick={() => setIsEventModalOpen(true)}>+ Nuevo Evento</button>
             )}
           </div>
-          <div className="agenda-list">
-            {eventosAgenda.length === 0 && <p className="empty-text">Aún no hay actividades programadas. 🌈</p>}
-            {eventosAgenda.map((ev) => (
-              <div key={ev.id} className={`agenda-card ${ev.tipo}`}>
-                <div className="agenda-info">
-                  <span className="agenda-title">{ev.titulo}</span>
-                  <span className="agenda-time">🕒 {ev.dia} - {ev.hora}</span>
-                </div>
-                <div className="agenda-side">
-                  <span className={`badge-type ${ev.tipo}`}>{ev.tipo === 'espiritual' ? '🟢 Espiritual' : '🔵 Hogar'}</span>
-                  {esAdministrador && (
-                    <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento">✕</button>
-                  )}
-                </div>
-              </div>
-            ))}
+
+          {/* Calendario horizontal de la semana */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            background: '#f8fafc', 
+            padding: '10px 8px', 
+            borderRadius: '14px', 
+            marginBottom: '16px', 
+            overflowX: 'auto',
+            border: '1px solid #e2e8f0',
+            gap: '6px'
+          }}>
+            {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((d) => {
+              const activo = diaSeleccionado === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDiaSeleccionado(d)}
+                  style={{
+                    background: activo ? '#4f46e5' : '#ffffff',
+                    color: activo ? '#ffffff' : '#475569',
+                    border: activo ? 'none' : '1px solid #cbd5e1',
+                    padding: '8px 10px',
+                    borderRadius: '10px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    flex: '1',
+                    textAlign: 'center',
+                    boxShadow: activo ? '0 4px 10px rgba(79, 70, 229, 0.2)' : 'none'
+                  }}
+                >
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', opacity: 0.8 }}>{d.slice(0, 3)}</div>
+                  <div style={{ fontSize: '14px', marginTop: '2px' }}>{d[0]}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ marginBottom: '14px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>
+            Actividades para: <strong style={{ color: '#1f2937' }}>{diaSeleccionado}</strong>
+          </div>
+
+          {/* Cuadros con colores pasteles suaves no saturados */}
+          <div className="agenda-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {eventosAgenda.filter(ev => ev.dia === diaSeleccionado).length === 0 ? (
+              <p className="empty-text">No hay actividades programadas para el {diaSeleccionado}. ¡Agrega la primera! 🌈</p>
+            ) : (
+              eventosAgenda.filter(ev => ev.dia === diaSeleccionado).map((ev) => {
+                const esEspiritual = ev.tipo === 'espiritual';
+                return (
+                  <div key={ev.id} style={{
+                    background: esEspiritual ? '#f0fdf4' : '#eff6ff',
+                    borderLeft: `4px solid ${esEspiritual ? '#22c55e' : '#3b82f6'}`,
+                    padding: '14px 16px',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                    border: `1px solid ${esEspiritual ? '#dcfce7' : '#dbeafe'}`
+                  }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '15px', color: '#1f2937', marginBottom: '4px' }}>{ev.titulo}</strong>
+                      <span style={{ fontSize: '13px', color: '#6b7280' }}>🕒 {ev.hora}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{
+                        fontSize: '11px',
+                        background: esEspiritual ? '#dcfce7' : '#dbeafe',
+                        color: esEspiritual ? '#15803d' : '#1d4ed8',
+                        padding: '4px 10px',
+                        borderRadius: '8px',
+                        fontWeight: '600'
+                      }}>
+                        {esEspiritual ? 'Espiritual' : 'Hogar'}
+                      </span>
+                      {esAdministrador && (
+                        <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento">✕</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
