@@ -496,7 +496,7 @@ function App() {
                       const tareasHijo = tareasDeberes.filter(t => t.para === hijo || t.para === 'todos');
                       const realizadasHijo = tareasHijo.filter(t => t.estado === 'realizado');
                       return (
-                        <div key={hijo} style={{ background: '#f8f9fc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <div key={hijo} style={{ background: '#f8f9fc', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#423267', marginBottom: '6px' }}>
                             <span>🧒 {hijo}</span>
                             <span>{realizadasHijo.length} / {tareasHijo.length} completadas</span>
@@ -506,7 +506,7 @@ function App() {
                           ) : (
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               {tareasHijo.map(t => (
-                                <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', background: '#fff', padding: '6px 10px', borderRadius: '8px' }}>
+                                <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', background: '#fff', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                                   <span>{t.texto}</span>
                                   <span style={{ color: t.estado === 'realizado' ? '#16a34a' : '#d97706', fontWeight: 'bold' }}>
                                     {t.estado === 'realizado' ? '✅ Hecho' : '⏳ Pendiente'}
@@ -626,7 +626,7 @@ function App() {
                 listaHijos.map(hijo => {
                   const tareasHijo = tareasDeberes.filter(t => t.para === hijo || t.para === 'todos');
                   return (
-                    <div key={hijo} style={{ background: '#f8f9fc', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div key={hijo} style={{ background: '#f8f9fc', padding: '16px', borderRadius: '18px', border: '1.5px solid #cbd5e1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#423267' }}>Deberes de</span>
                         <span style={{ fontSize: '12px', background: '#ede8ff', color: '#7e69f8', padding: '4px 12px', borderRadius: '999px', fontWeight: '800' }}>
@@ -647,13 +647,13 @@ function App() {
                                 key={tarea.id} 
                                 className="task-item-card" 
                                 style={{ 
-                                  padding: '14px 16px', 
+                                  padding: '12px 14px', 
                                   borderRadius: '16px', 
                                   display: 'flex', 
                                   flexDirection: 'column', 
-                                  gap: '4px', 
+                                  gap: '2px', 
                                   background: esRealizado ? '#f0fdf4' : '#fef2f2', 
-                                  border: `1.5px solid ${esRealizado ? '#4ade80' : '#f87171'}`,
+                                  border: `1.5px solid ${esRealizado ? '#10b981' : '#ef4444'}`,
                                   position: 'relative'
                                 }}
                               >
@@ -663,29 +663,29 @@ function App() {
                                     className="task-delete-btn" 
                                     onClick={() => eliminarTarea(tarea.id)} 
                                     aria-label="Eliminar deber"
-                                    style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
+                                    style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
                                   >
                                     ✕
                                   </button>
                                 )}
 
-                                <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.2', marginBottom: '-2px' }}>
+                                <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.2' }}>
                                   {tarea.texto}
                                 </span>
 
-                                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', marginBottom: '4px' }}>
+                                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', marginBottom: '2px' }}>
                                   {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
                                 </span>
 
                                 {tarea.evidencia_url && (
                                   <div 
                                     onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                                    style={{ background: '#fff', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
+                                    style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
                                   >
                                     <span style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
                                       📷 Ver foto de evidencia
                                     </span>
-                                    <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                                    <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
                                   </div>
                                 )}
 
@@ -734,13 +734,13 @@ function App() {
                       key={tarea.id} 
                       className="task-item-card" 
                       style={{ 
-                        padding: '14px 16px', 
+                        padding: '12px 14px', 
                         borderRadius: '16px', 
                         display: 'flex', 
                         flexDirection: 'column', 
-                        gap: '4px', 
+                        gap: '2px', 
                         background: esRealizado ? '#f0fdf4' : '#fef2f2', 
-                        border: `1.5px solid ${esRealizado ? '#4ade80' : '#f87171'}`,
+                        border: `1.5px solid ${esRealizado ? '#10b981' : '#ef4444'}`,
                         position: 'relative'
                       }}
                     >
@@ -750,34 +750,34 @@ function App() {
                           className="task-delete-btn" 
                           onClick={() => eliminarTarea(tarea.id)} 
                           aria-label="Eliminar deber"
-                          style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
+                          style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
                         >
                           ✕
                         </button>
                       )}
 
-                      <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.2', marginBottom: '-2px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.2' }}>
                         {tarea.texto}
                       </span>
 
-                      <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', marginBottom: '2px' }}>
                         {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
                       </span>
 
                       {tarea.evidencia_url && (
                         <div 
                           onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                          style={{ background: '#fff', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
+                          style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
                         >
                           <span style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
                             📷 Ver foto de evidencia
                           </span>
-                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
                         </div>
                       )}
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px' }}>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
                           <button 
                             type="button"
                             className={`task-toggle-btn ${tarea.estado}`}
@@ -822,7 +822,7 @@ function App() {
                           </label>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '-2px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                           <span style={{ fontSize: '12px', fontWeight: 'bold', color: esRealizado ? '#059669' : '#d97706' }}>
                             {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
                           </span>
@@ -873,7 +873,7 @@ function App() {
             borderRadius: '14px', 
             marginBottom: '16px', 
             overflowX: 'auto',
-            border: '1px solid #e2e8f0',
+            border: '1.5px solid #cbd5e1',
             gap: '6px',
             width: '100%',
             boxSizing: 'border-box'
@@ -888,7 +888,7 @@ function App() {
                   style={{
                     background: activo ? '#4f46e5' : '#ffffff',
                     color: activo ? '#ffffff' : '#475569',
-                    border: activo ? 'none' : '1px solid #cbd5e1',
+                    border: activo ? 'none' : '1.5px solid #94a3b8',
                     padding: '8px 10px',
                     borderRadius: '10px',
                     fontWeight: 'bold',
@@ -912,7 +912,7 @@ function App() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
             {eventosAgenda.length === 0 ? (
-              <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+              <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
                 No hay actividades programadas en la agenda. ¡Agrega la primera! 🌈
               </div>
             ) : (
@@ -923,36 +923,36 @@ function App() {
                 return (
                   <div key={ev.id} style={{
                     background: esDelDiaSeleccionado ? (esEspiritual ? '#f0fdf4' : '#eff6ff') : '#ffffff',
-                    borderLeft: esDelDiaSeleccionado ? `4px solid ${esEspiritual ? '#22c55e' : '#3b82f6'}` : '4px solid #cbd5e1',
+                    borderLeft: esDelDiaSeleccionado ? `4px solid ${esEspiritual ? '#16a34a' : '#2563eb'}` : '4px solid #64748b',
                     padding: '14px 14px',
                     borderRadius: '14px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-                    border: `1px solid ${esDelDiaSeleccionado ? (esEspiritual ? '#dcfce7' : '#dbeafe') : '#e2e8f0'}`,
+                    border: `1.5px solid ${esDelDiaSeleccionado ? (esEspiritual ? '#86efac' : '#93c5fd') : '#cbd5e1'}`,
                     minHeight: '90px',
                     boxSizing: 'border-box',
-                    opacity: esDelDiaSeleccionado ? 1 : 0.75
+                    opacity: esDelDiaSeleccionado ? 1 : 0.85
                   }}>
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                         <span style={{
                           fontSize: '10px',
                           background: esDelDiaSeleccionado ? (esEspiritual ? '#dcfce7' : '#dbeafe') : '#f1f5f9',
-                          color: esDelDiaSeleccionado ? (esEspiritual ? '#15803d' : '#1d4ed8') : '#64748b',
+                          color: esDelDiaSeleccionado ? (esEspiritual ? '#15803d' : '#1d4ed8') : '#475569',
                           padding: '2px 8px',
                           borderRadius: '6px',
                           fontWeight: '600'
                         }}>
                           {esEspiritual ? 'Espiritual' : 'Hogar'}
                         </span>
-                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#374151' : '#94a3b8', fontWeight: 'bold' }}>{ev.dia}</span>
+                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#374151' : '#64748b', fontWeight: 'bold' }}>{ev.dia}</span>
                       </div>
-                      <strong style={{ display: 'block', fontSize: '14px', color: esDelDiaSeleccionado ? '#1f2937' : '#475569', marginBottom: '4px', lineHeight: '1.2' }}>{ev.titulo}</strong>
+                      <strong style={{ display: 'block', fontSize: '14px', color: esDelDiaSeleccionado ? '#1f2937' : '#334155', marginBottom: '4px', lineHeight: '1.2' }}>{ev.titulo}</strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#6b7280' }}>🕒 {ev.hora}</span>
+                      <span style={{ fontSize: '12px', color: '#4b5563' }}>🕒 {ev.hora}</span>
                       {esAdministrador && (
                         <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento" style={{ fontSize: '12px', padding: '2px 6px' }}>✕</button>
                       )}
