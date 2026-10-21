@@ -4,16 +4,22 @@
   flex-direction: column;
   gap: 14px;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 4px;
 }
 
 .config-hogar {
   background: linear-gradient(135deg, #e8dff5 0%, #fce1e4 50%, #fcf4dd 100%);
   color: #3f315e;
-  border-radius: 24px;
-  padding: 18px;
+  border-radius: 20px;
+  padding: 18px 16px;
   text-align: left;
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 8px 20px rgba(126, 105, 248, 0.12);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .config-hogar-label {
@@ -41,8 +47,11 @@
   background: var(--blanco);
   border: 1px solid var(--borde);
   border-radius: 20px;
-  padding: 16px;
+  padding: 16px 12px;
   box-shadow: 0 4px 12px rgba(126, 105, 248, 0.05);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .config-titulo {
@@ -51,6 +60,7 @@
   color: var(--texto);
   text-align: left;
   margin-bottom: 10px;
+  padding-left: 4px;
 }
 
 .config-vacio {
@@ -65,16 +75,25 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .config-miembro {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 10px;
   background: #fbf9ff;
   border: 1px solid var(--borde);
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 12px 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .config-miembro.admin {
@@ -112,6 +131,7 @@
 .config-miembro-info strong {
   font-size: 14px;
   color: var(--texto);
+  word-break: break-word;
 }
 
 .config-miembro-info em {
@@ -131,21 +151,24 @@
   flex-shrink: 0;
   font-size: 11px;
   font-weight: 800;
-  padding: 4px 9px;
-  border-radius: 999px;
+  padding: 4px 8px;
+  border-radius: 8px;
   white-space: nowrap;
 }
 
 .config-badge.admin {
-  background: #fef3c7;
-  color: #b45309;
+  background: #e2e8f0;
+  color: #475569;
 }
 
 .config-acciones {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   margin-top: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .config-btn {
@@ -155,6 +178,9 @@
   font-size: 14px;
   font-weight: 800;
   transition: transform 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
 }
 
 .config-btn:active { transform: scale(0.98); }
