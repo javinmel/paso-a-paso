@@ -26,11 +26,11 @@ const saludos = [
 ];
 
 const animos = [
-  'Paso a pasito, vas muy bien 🌱',
-  'Hoy brillas, y se nota ✨',
-  'Lo estás haciendo genial 🌈',
-  'Aquí estamos contigo 🤗',
-  'Un día a la vez, tú puedes ☀️'
+  'Hoy será un gran día',
+  'Hoy brillas, y se nota ',
+  'Lo estás haciendo genial ',
+  'Aquí estamos contigo ',
+  'Un día a la vez, tú puedes '
 ];
 
 const bancoFrasesMensual = [
@@ -431,7 +431,7 @@ function App() {
         </li>
         <li className={`duty-row ${lecturaHoy ? 'realizado' : 'pendiente'}`}>
           <span className="duty-mark">{lecturaHoy ? '✓' : ''}</span>
-          <span className="duty-text">🌿 Lectura bíblica · {totalCapitulos} cap.</span>
+          <span className="duty-text"> Lectura bíblica · {totalCapitulos} cap.</span>
           <span className={`duty-pill ${lecturaHoy ? 'realizado' : 'pendiente'}`}>{lecturaHoy ? 'Realizado' : 'Pendiente'}</span>
         </li>
       </ul>
@@ -562,7 +562,6 @@ function App() {
 
                 <div className="phone-time">
                   <div className="phone-time-row">
-                    <span className="phone-icon">📱</span>
                     <span className="phone-time-label">Tiempo de celular ganado</span>
                     <span className="phone-time-value">{formatearTiempo(minutosGanados)}{totalTareas > 0 && tareasHechas === totalTareas ? ' 🎉' : ''}</span>
                   </div>
@@ -907,13 +906,13 @@ function App() {
           </div>
 
           <div style={{ marginBottom: '14px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>
-            Mostrando agenda semanal (Día activo destacado: <strong style={{ color: '#4f46e5' }}>{diaSeleccionado}</strong>)
+            Agenda semanal -  <strong style={{ color: '#4f46e5' }}>{diaSeleccionado}</strong>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
             {eventosAgenda.length === 0 ? (
               <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
-                No hay actividades programadas en la agenda. ¡Agrega la primera! 🌈
+                No hay actividades programadas en la agenda. ¡Agrega la primera! 
               </div>
             ) : (
               eventosAgenda.map((ev) => {
@@ -979,7 +978,7 @@ function App() {
               <p>Empieza el día con un pensamiento que da ánimo y fortalece.</p>
               {textoLeidoHoy && <p className="done-note">✅ ¡Ya leíste el texto de hoy! Qué buen hábito.</p>}
               <button className="btn-action-main" onClick={abrirTextoDiario}>
-                Abrir Texto Diario 📖
+                Abrir Texto Diario 
               </button>
             </div>
           )}
