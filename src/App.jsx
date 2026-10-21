@@ -100,7 +100,7 @@ const recursosEmocion = {
   },
   desilusion: {
     emoji: '😞', etiqueta: 'Desilusionado',
-    titulo: 'Когда algo no salió como esperabas',
+    titulo: 'Cuando algo no salió como esperabas',
     mensaje: 'Equivocarse o que algo salga mal no define quién eres. Lo importante es que sigues intentándolo con ánimo.',
     ref: 'Salmo 55:22',
     accion: 'Piensa en algo que sí salió bien hoy, aunque sea pequeñito 🌱',
@@ -176,7 +176,16 @@ function App() {
   const [textoDiarioDias, setTextoDiarioDias] = useState([]);
   const [lecturaDias, setLecturaDias] = useState([]);
 
-  const [tareasDeberes, setTareasDeberes] = useState([]);
+  // Carga inicial desde localStorage para evitar parpadeo en blanco al refrescar
+  const [tareasDeberes, setTareasDeberes] = useState(() => {
+    try {
+      const t = localStorage.getItem('tareas_datos');
+      return t ? JSON.parse(t) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [eventosAgenda, setEventosAgenda] = useState([]);
   const [miembrosHogar, setMiembrosHogar] = useState([]);
 
@@ -207,7 +216,10 @@ function App() {
         .from('tareas')
         .select('*')
         .eq('familia', familia.nombreFamilia);
-      if (tareasData) setTareasDeberes(tareasData);
+      if (tareasData) {
+        setTareasDeberes(tareasData);
+        localStorage.setItem('tareas_datos', JSON.stringify(tareasData));
+      }
 
       const { data: agendaData } = await supabase
         .from('agenda')
@@ -369,12 +381,16 @@ function App() {
     setNuevaTarea('');
     const { data } = await supabase.from('tareas').insert([nuevaObj]).select();
     if (data) {
-      setTareasDeberes(prev => [...prev, data[0]]);
+      const actualizadas = [...tareasDeberes, data[0]];
+      setTareasDeberes(actualizadas);
+      localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
     }
   };
 
   const eliminarTarea = async (id) => {
-    setTareasDeberes(prev => prev.filter(t => t.id !== id));
+    const actualizadas = tareasDeberes.filter(t => t.id !== id);
+    setTareasDeberes(actualizadas);
+    localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
     await supabase.from('tareas').delete().eq('id', id);
   };
 
@@ -631,13 +647,13 @@ function App() {
                                 key={tarea.id} 
                                 className="task-item-card" 
                                 style={{ 
-                                  padding: '16px', 
+                                  padding: '14px 16px', 
                                   borderRadius: '16px', 
                                   display: 'flex', 
                                   flexDirection: 'column', 
-                                  gap: '10px', 
+                                  gap: '4px', 
                                   background: esRealizado ? '#f0fdf4' : '#fef2f2', 
-                                  border: `1px solid ${esRealizado ? '#bbf7d0' : '#fecaca'}`,
+                                  border: `1.5px solid ${esRealizado ? '#4ade80' : '#f87171'}`,
                                   position: 'relative'
                                 }}
                               >
@@ -647,40 +663,42 @@ function App() {
                                     className="task-delete-btn" 
                                     onClick={() => eliminarTarea(tarea.id)} 
                                     aria-label="Eliminar deber"
-                                    style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
+                                    style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
                                   >
                                     ✕
                                   </button>
                                 )}
 
-                                <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.3' }}>
+                                <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.2', marginBottom: '-2px' }}>
                                   {tarea.texto}
                                 </span>
 
-                                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700' }}>
+                                <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', marginBottom: '4px' }}>
                                   {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
                                 </span>
 
                                 {tarea.evidencia_url && (
                                   <div 
                                     onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                                    style={{ background: '#fff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                                    style={{ background: '#fff', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
                                   >
-                                    <span style={{ fontSize: '12px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
+                                    <span style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
                                       📷 Ver foto de evidencia
                                     </span>
-                                    <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                                    <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                                   </div>
                                 )}
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
                                   <button 
                                     type="button"
                                     className={`task-toggle-btn ${tarea.estado}`}
-                                    style={{ fontSize: '11px', padding: '7px 14px', borderRadius: '8px' }}
+                                    style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
                                     onClick={async () => {
                                       const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
-                                      setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t));
+                                      const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
+                                      setTareasDeberes(actualizadas);
+                                      localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
                                       await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
                                     }}
                                   >
@@ -716,13 +734,13 @@ function App() {
                       key={tarea.id} 
                       className="task-item-card" 
                       style={{ 
-                        padding: '16px', 
+                        padding: '14px 16px', 
                         borderRadius: '16px', 
                         display: 'flex', 
                         flexDirection: 'column', 
-                        gap: '10px', 
+                        gap: '4px', 
                         background: esRealizado ? '#f0fdf4' : '#fef2f2', 
-                        border: `1px solid ${esRealizado ? '#bbf7d0' : '#fecaca'}`,
+                        border: `1.5px solid ${esRealizado ? '#4ade80' : '#f87171'}`,
                         position: 'relative'
                       }}
                     >
@@ -732,50 +750,52 @@ function App() {
                           className="task-delete-btn" 
                           onClick={() => eliminarTarea(tarea.id)} 
                           aria-label="Eliminar deber"
-                          style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
+                          style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%' }}
                         >
                           ✕
                         </button>
                       )}
 
-                      <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.3' }}>
+                      <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.2', marginBottom: '-2px' }}>
                         {tarea.texto}
                       </span>
 
-                      <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700' }}>
+                      <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700', marginBottom: '4px' }}>
                         {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
                       </span>
 
                       {tarea.evidencia_url && (
                         <div 
                           onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                          style={{ background: '#fff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                          style={{ background: '#fff', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
                         >
-                          <span style={{ fontSize: '12px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
-                            📷 Toca para ver foto de evidencia
+                          <span style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
+                            📷 Ver foto de evidencia
                           </span>
-                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                         </div>
                       )}
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                           <button 
                             type="button"
                             className={`task-toggle-btn ${tarea.estado}`}
-                            style={{ fontSize: '11px', padding: '7px 12px', borderRadius: '8px' }}
+                            style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
                             onClick={async () => {
                               const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
-                              setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t));
+                              const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
+                              setTareasDeberes(actualizadas);
+                              localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
                               await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
                             }}
                           >
                             {esRealizado ? 'Marcar Pendiente' : 'Marcar Hecho'}
                           </button>
 
-                          {/* Tomar foto comprimida y subida a Supabase Storage */}
-                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ede8ff', color: '#7e69f8', padding: '7px 12px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                            📷 Tomar foto
+                          {/* Tomar foto sin icono de cámara */}
+                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ede8ff', color: '#7e69f8', padding: '6px 12px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center' }}>
+                            Tomar foto
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -790,7 +810,9 @@ function App() {
                                   const urlPublica = await subirEvidencia(familia.nombreFamilia, tarea.id, archivoComprimido);
                                   
                                   await supabase.from('tareas').update({ evidencia_url: urlPublica }).eq('id', tarea.id);
-                                  setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlPublica } : t));
+                                  const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlPublica } : t);
+                                  setTareasDeberes(actualizadas);
+                                  localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
                                   alert('¡Foto de evidencia enviada con éxito!');
                                 } catch (err) {
                                   alert(err.message || 'No se pudo subir la foto.');
@@ -800,7 +822,7 @@ function App() {
                           </label>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '-2px' }}>
                           <span style={{ fontSize: '12px', fontWeight: 'bold', color: esRealizado ? '#059669' : '#d97706' }}>
                             {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
                           </span>
