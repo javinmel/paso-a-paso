@@ -1,0 +1,180 @@
+/* ============ CONFIGURACIÓN ============ */
+.config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.config-hogar {
+  background: linear-gradient(135deg, #e8dff5 0%, #fce1e4 50%, #fcf4dd 100%);
+  color: #3f315e;
+  border-radius: 24px;
+  padding: 18px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 20px rgba(126, 105, 248, 0.12);
+}
+
+.config-hogar-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6a539b;
+}
+
+.config-hogar h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 3px 0 4px;
+  color: #352654;
+}
+
+.config-hogar p {
+  font-size: 12px;
+  font-weight: 600;
+  color: #615082;
+}
+
+.config-seccion {
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(126, 105, 248, 0.05);
+}
+
+.config-titulo {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--texto);
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.config-vacio {
+  font-size: 13px;
+  color: var(--texto-suave);
+  text-align: center;
+  padding: 10px 0;
+}
+
+.config-miembros {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-miembro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fbf9ff;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.config-miembro.admin {
+  background: #f6f2ff;
+  border-color: #d9ccfb;
+}
+
+.config-avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #e4dcff;
+  color: var(--texto);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.config-miembro.admin .config-avatar {
+  background: var(--primario);
+  color: #ffffff;
+}
+
+.config-miembro-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.config-miembro-info strong {
+  font-size: 14px;
+  color: var(--texto);
+}
+
+.config-miembro-info em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.config-miembro-info small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.config-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.config-badge.admin {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.config-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.config-btn {
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
+  transition: transform 0.15s;
+}
+
+.config-btn:active { transform: scale(0.98); }
+
+.config-btn.cambiar {
+  background: var(--primario-suave);
+  color: var(--primario);
+  border: 1px solid #d9ccfb;
+}
+
+.config-btn.salir {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+.config-ayuda {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--texto-suave);
+  text-align: center;
+  margin-bottom: 8px;
+}

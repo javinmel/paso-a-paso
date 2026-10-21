@@ -4,9 +4,9 @@
   background: linear-gradient(135deg, #e8dff5 0%, #fce1e4 50%, #fcf4dd 100%);
   display: flex;
   justify-content: center;
-  align-items: center;
   z-index: 2000;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .onboarding-card {
@@ -22,6 +22,12 @@
   gap: 14px;
   box-shadow: 0 20px 35px -10px rgba(126, 105, 248, 0.25);
   animation: modalScale 0.25s ease-in-out;
+  margin: auto;
+}
+
+@keyframes modalScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .onboarding-icon {
@@ -96,5 +102,107 @@
   color: #dc2626;
   font-size: 12px;
   font-weight: 700;
+  text-align: center;
+}
+
+.onboarding-form .field-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #423267;
+}
+
+/* ============ LISTA DE MIEMBROS ============ */
+.miembros-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.miembro-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: #fbf9ff;
+  border: 1px solid #ebdffc;
+  border-radius: 16px;
+  padding: 10px 12px;
+  text-align: left;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.miembro-card:active { transform: scale(0.98); }
+.miembro-card:hover { border-color: #7e69f8; }
+
+.miembro-card.admin {
+  background: #f6f2ff;
+  border-color: #d9ccfb;
+}
+
+.miembro-avatar,
+.clave-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #e4dcff;
+  color: #423267;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.miembro-card.admin .miembro-avatar,
+.clave-avatar {
+  background: #7e69f8;
+  color: #ffffff;
+}
+
+.clave-avatar {
+  align-self: center;
+  width: 54px;
+  height: 54px;
+  font-size: 22px;
+}
+
+.miembro-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.miembro-info strong {
+  font-size: 14px;
+  color: #423267;
+}
+
+.miembro-info small {
+  font-size: 12px;
+  font-weight: 600;
+  color: #736298;
+}
+
+.miembro-flecha {
+  font-size: 18px;
+  color: #a294c3;
+}
+
+.onboarding-link {
+  background: none;
+  border: none;
+  color: #7e69f8;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px;
+  align-self: center;
+}
+
+.onboarding-form .onboarding-hint {
   text-align: center;
 }

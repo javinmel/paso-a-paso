@@ -1,69 +1,55 @@
 import React from 'react';
+import './Configuracion.css';
+import { esRolAdmin, etiquetaRol, nombreBonito, ordenarMiembros } from '../utils/roles';
 
-function Configuracion({ familia, miembrosHogars = [], onCambiarHogar, onCerrarSesion, onVolver }) {
-  const miembros = miembrosHogars || [];
+function Configuracion({ familia, miembros = [], usuarioActual, onCambiarHogar, onCerrarSesion }) {
+  const lista = ordenarMiembros(miembros || []);
 
   return (
-    <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box' }}>
-      <div className="panel-title-row">
-        <h3>⚙️ Configuración</h3>
-        <button className="icon-btn" onClick={onVolver}>⬅️</button>
+    <div className="config-panel">
+      <div className="config-hogar">
+        <span className="config-hogar-label">Tu hogar</span>
+        <h2>{nombreBonito(familia?.nombreFamilia)}</h2>
+        <p>Comparte este nombre para que otros se unan</p>
       </div>
 
-      <div className="tab-content" style={{ textAlign: 'left', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{
-          background: '#2b2d42',
-          color: '#fff',
-          padding: '18px',
-          borderRadius: '16px',
-          marginBottom: '20px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-        }}>
-          <span style={{ fontSize: '11px', color: '#a0aec0', textTransform: 'uppercase', letterSpacing: '1px' }}>Tu hogar</span>
-          <h2 style={{ fontSize: '24px', margin: '4px 0 6px 0', fontWeight: 'bold' }}>{familia?.nombreFamilia}</h2>
-          <p style={{ fontSize: '13px', color: '#cbd5e1', margin: 0 }}>Comparte este nombre para que otros se unan</p>
-        </div>
+      <section className="config-seccion">
+        <h4 className="config-titulo">Miembros del hogar ({lista.length})</h4>
 
-        <div style={{ marginBottom: '24px' }}>
-          <h4 style={{ fontSize: '15px', color: '#423267', marginBottom: '10px' }}>
-            Miembros del hogar ({miembros.length})
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {miembros.map((m) => {
-              const rolStr = m.rol || 'Miembro';
-              const esAdmin = m.nombre === familia?.administrador || ['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(rolStr);
+        {lista.length === 0 ? (
+          <p className="config-vacio">Aún no hay miembros en este hogar.</p>
+        ) : (
+          <ul className="config-miembros">
+            {lista.map((m) => {
+              const admin = esRolAdmin(m.rol);
               return (
-                <div key={m.id || m.nombre} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8f9fc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  <span style={{
-                    background: esAdmin ? '#7e69f8' : '#cbd5e1',
-                    color: esAdmin ? '#fff' : '#1e293b',
-                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 'bold', fontSize: '15px'
-                  }}>
-                    {m.nombre ? m.nombre[0].toUpperCase() : 'U'}
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ display: 'block', fontSize: '14px', color: '#1e293b' }}>{m.nombre}</strong>
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>
-                      Rol: {rolStr}
-                    </span>
+                <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`}>
+                  <span className="config-avatar">{(m.nombre || 'U')[0].toUpperCase()}</span>
+                  <div className="config-miembro-info">
+                    <strong>
+                      {m.nombre}
+                      {m.nombre === usuarioActual && <em> (tú)</em>}
+                    </strong>
+                    <small>{etiquetaRol(m.rol)}</small>
                   </div>
-                  <span style={{ fontSize: '11px', background: '#e2e8f0', padding: '3px 8px', borderRadius: '6px', color: '#475569' }}>
-                    {esAdmin ? '👑 Admin' : '🧒 Miembro'}
-                  </span>
-                </div>
+                  {admin && <span className="config-badge admin">👑 Administrador</span>}
+                </li>
               );
             })}
-          </div>
-        </div>
+          </ul>
+        )}
+      </section>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
-          <button type="button" className="btn-action-main" onClick={onCambiarHogar} style={{ backgroundColor: '#2563eb', color: '#fff' }}>
-            🔄 Cambiar de hogar
-          </button>
-          <button type="button" className="btn-action-main" onClick={onCerrarSesion} style={{ backgroundColor: '#dc2626', color: '#fff' }}>
-            🚪 Cerrar sesión
-          </button>
-        </div>
+      <div className="config-acciones">
+        <button type="button" className="config-btn cambiar" onClick={onCambiarHogar}>
+          🔄 Cambiar de hogar
+        </button>
+        <p className="config-ayuda">Entra a otro hogar o crea uno nuevo.</p>
+
+        <button type="button" className="config-btn salir" onClick={onCerrarSesion}>
+          🚪 Cerrar sesión
+        </button>
+        <p className="config-ayuda">Otro miembro de la familia podrá entrar desde este mismo hogar.</p>
       </div>
     </div>
   );

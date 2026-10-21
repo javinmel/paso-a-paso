@@ -3,6 +3,7 @@ import './App.css';
 import Onboarding from './components/Onboarding';
 import Configuracion from './components/Configuracion';
 import { supabase } from './supabaseClient';
+import { esRolAdmin, etiquetaRol } from './utils/roles';
 
 const fechaHoy = () => new Date().toLocaleDateString('en-CA');
 const MIN_POR_TAREA = 15;
@@ -153,7 +154,12 @@ function App() {
   const [emocionSeleccionada, setEmocionSeleccionada] = useState(null);
 
   const [nombre, setNombre] = useState(() => {
-    try { return localStorage.getItem('nombre_usuario') ? JSON.parse(localStorage.getItem('nombre_usuario')) : 'Luis'; } catch { return 'Luis'; }
+    try {
+      const guardado = localStorage.getItem('nombre_usuario');
+      return guardado ? JSON.parse(guardado) : null;
+    } catch {
+      return null;
+    }
   });
 
   const diaHoy = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
@@ -180,22 +186,20 @@ function App() {
   const [nuevoTipo, setNuevoTipo] = useState('espiritual');
 
   const miembroActual = miembrosHogar.find(m => m.nombre === nombre);
-  const esAdministrador = familia && (
-    nombre === familia.administrador || 
-    familia.rolAdmin === nombre ||
-    ['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(miembroActual?.rol) ||
-    ['Papá', 'Mamá'].includes(nombre) ||
-    miembroActual?.rol === 'Papá' ||
-    miembroActual?.rol === 'Mamá'
+  const esAdministrador = !!familia && !!nombre && (
+    nombre === familia.administrador || esRolAdmin(miembroActual?.rol)
   );
+
+  // Rol que se muestra junto al nombre: Papá, Mamá o Hijo
+  const rolVisible = etiquetaRol(miembroActual?.rol ?? (esAdministrador ? familia?.rolAdmin : 'Hijo'));
   
   const listaHijos = miembrosHogar.filter(m => 
     m.nombre !== familia?.administrador && 
-    !['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(m.rol)
+    !esRolAdmin(m.rol)
   ).map(m => m.nombre);
 
   useEffect(() => {
-    if (!familia) return;
+    if (!familia || !nombre) return;
 
     const cargarDatosSupabase = async () => {
       const { data: tareasData } = await supabase
@@ -226,6 +230,7 @@ function App() {
         const textDias = [];
         const lecDias = [];
         progData.forEach(item => {
+          if (item.usuario !== nombre) return;
           if (item.tipo === 'biblia') {
             caps[item.clave] = true;
             if (item.fecha && !lecDias.includes(item.fecha)) lecDias.push(item.fecha);
@@ -252,7 +257,7 @@ function App() {
     return () => {
       supabase.removeChannel(canal);
     };
-  }, [familia]);
+  }, [familia, nombre]);
 
   const manejarFamiliaCreada = (datos, usuarioNombre) => {
     setFamilia(datos);
@@ -261,17 +266,19 @@ function App() {
     localStorage.setItem('nombre_usuario', JSON.stringify(usuarioNombre));
   };
 
+  // Cerrar sesión: se queda en el hogar y vuelve a la lista de miembros
   const cerrarSesion = () => {
-    localStorage.removeItem('familia_datos');
     localStorage.removeItem('nombre_usuario');
-    setFamilia(null);
+    setNombre(null);
     setCurrentView('home');
   };
 
+  // Cambiar de hogar: vuelve al inicio para entrar a otro hogar o crear uno
   const cambiarHogar = () => {
     localStorage.removeItem('familia_datos');
     localStorage.removeItem('nombre_usuario');
     setFamilia(null);
+    setNombre(null);
     setCurrentView('home');
   };
 
@@ -398,9 +405,28 @@ function App() {
     await supabase.from('agenda').delete().eq('id', id);
   };
 
+  // Tablero de actividades espirituales: igual para papás e hijos
+  const tableroEspiritual = (
+    <div className="board-box">
+      <div className="board-title">Actividades espirituales</div>
+      <ul className="duties-list">
+        <li className={`duty-row ${textoLeidoHoy ? 'realizado' : 'pendiente'}`}>
+          <span className="duty-mark">{textoLeidoHoy ? '✓' : ''}</span>
+          <span className="duty-text">📖 Texto diario</span>
+          <span className={`duty-pill ${textoLeidoHoy ? 'realizado' : 'pendiente'}`}>{textoLeidoHoy ? 'Realizado' : 'Pendiente'}</span>
+        </li>
+        <li className={`duty-row ${lecturaHoy ? 'realizado' : 'pendiente'}`}>
+          <span className="duty-mark">{lecturaHoy ? '✓' : ''}</span>
+          <span className="duty-text">🌿 Lectura bíblica · {totalCapitulos} cap.</span>
+          <span className={`duty-pill ${lecturaHoy ? 'realizado' : 'pendiente'}`}>{lecturaHoy ? 'Realizado' : 'Pendiente'}</span>
+        </li>
+      </ul>
+    </div>
+  );
+
   return (
     <div className="app-container">
-      {!familia && <Onboarding onFamiliaCreada={manejarFamiliaCreada} />}
+      {(!familia || !nombre) && <Onboarding familiaInicial={familia} onFamiliaCreada={manejarFamiliaCreada} />}
 
       {/* Barra superior */}
       <header className="app-header">
@@ -419,18 +445,21 @@ function App() {
           </span>
         </div>
         <div className="header-right">
-          <span>{nombre}</span>
+          <span>
+            {nombre}
+            {nombre && <b className={`rol-chip ${esAdministrador ? 'admin' : ''}`}>{rolVisible}</b>}
+          </span>
         </div>
       </header>
 
       {/* MÓDULO DE CONFIGURACIÓN SEPARADO */}
       {currentView === 'config' && (
-        <Configuracion 
+        <Configuracion
           familia={familia}
-          miembrosHogars={miembrosHogars}
+          miembros={miembrosHogar}
+          usuarioActual={nombre}
           onCambiarHogar={cambiarHogar}
           onCerrarSesion={cerrarSesion}
-          onVolver={() => setCurrentView('home')}
         />
       )}
 
@@ -482,6 +511,8 @@ function App() {
                 )}
               </div>
 
+              {tableroEspiritual}
+
               {eventosHoy.length > 0 && (
                 <div className="board-note">
                   {eventosHoy.map(ev => (
@@ -527,21 +558,7 @@ function App() {
                   <div className="phone-progress"><div className="phone-progress-fill" style={{ width: `${porcentaje}%` }}></div></div>
                 </div>
 
-                <div className="board-box">
-                  <div className="board-title">Actividades espirituales</div>
-                  <ul className="duties-list">
-                    <li className={`duty-row ${textoLeidoHoy ? 'realizado' : 'pendiente'}`}>
-                      <span className="duty-mark">{textoLeidoHoy ? '✓' : ''}</span>
-                      <span className="duty-text">📖 Texto diario</span>
-                      <span className={`duty-pill ${textoLeidoHoy ? 'realizado' : 'pendiente'}`}>{textoLeidoHoy ? 'Realizado' : 'Pendiente'}</span>
-                    </li>
-                    <li className={`duty-row ${lecturaHoy ? 'realizado' : 'pendiente'}`}>
-                      <span className="duty-mark">{lecturaHoy ? '✓' : ''}</span>
-                      <span className="duty-text">🌿 Lectura bíblica · {totalCapitulos} cap.</span>
-                      <span className={`duty-pill ${lecturaHoy ? 'realizado' : 'pendiente'}`}>{lecturaHoy ? 'Realizado' : 'Pendiente'}</span>
-                    </li>
-                  </ul>
-                </div>
+                {tableroEspiritual}
 
                 {eventosHoy.length > 0 && (
                   <div className="board-note">
@@ -864,7 +881,7 @@ function App() {
                 </select>
                 <input type="text" placeholder="Hora (Ej: 7:00 PM)" value={nuevaHora} onChange={(e) => setNuevaHora(e.target.value)} className="input-custom" />
               </div>
-              <select value={nuevoType} onChange={(e) => setNuevoTipo(e.target.value)} className="select-custom">
+              <select value={nuevoTipo} onChange={(e) => setNuevoTipo(e.target.value)} className="select-custom">
                 <option value="espiritual">🟢 Espiritual</option>
                 <option value="hogar">🔵 Hogar / Seglar</option>
               </select>

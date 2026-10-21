@@ -721,3 +721,20 @@ button {
 .modal-buttons { display: flex; gap: 8px; width: 100%; margin-top: 6px; }
 .btn-cancelar { flex: 1; background-color: var(--primario-suave); border: none; padding: 12px; border-radius: 12px; font-weight: 700; color: var(--texto-suave); }
 .btn-confirmar { flex: 1; background-color: var(--primario); border: none; padding: 12px; border-radius: 12px; font-weight: 700; color: #ffffff; }
+
+/* ============ ROL JUNTO AL NOMBRE ============ */
+.rol-chip {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--primario-suave);
+  color: var(--primario);
+  vertical-align: middle;
+}
+
+.rol-chip.admin {
+  background: #fef3c7;
+  color: #b45309;
+}
