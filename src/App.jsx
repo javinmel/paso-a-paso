@@ -26,11 +26,11 @@ const saludos = [
 ];
 
 const animos = [
-  'Hoy será un gran día',
-  'Hoy brillas, y se nota ',
-  'Lo estás haciendo genial ',
-  'Aquí estamos contigo ',
-  'Un día a la vez, tú puedes '
+  'Paso a pasito, vas muy bien 🌱',
+  'Hoy brillas, y se nota ✨',
+  'Lo estás haciendo genial 🌈',
+  'Aquí estamos contigo 🤗',
+  'Un día a la vez, tú puedes ☀️'
 ];
 
 const bancoFrasesMensual = [
@@ -108,7 +108,7 @@ const recursosEmocion = {
   },
   enojo: {
     emoji: '⚡', etiqueta: 'Molesto',
-    titulo: 'Cuando el enojo se siente muy fuerte',
+    titulo: 'Когда el enojo se siente muy fuerte',
     mensaje: 'Sentir enojo no es malo; lo importante es qué hacemos con él. Una respuesta tranquila ayuda a que la paz vuelva al corazón.',
     ref: 'Proverbios 15:1',
     accion: 'Antes de hablar, cuenta hasta 10 y toma un poco de agua 💧',
@@ -176,7 +176,6 @@ function App() {
   const [textoDiarioDias, setTextoDiarioDias] = useState([]);
   const [lecturaDias, setLecturaDias] = useState([]);
 
-  // Carga inicial desde localStorage para evitar parpadeo en blanco al refrescar
   const [tareasDeberes, setTareasDeberes] = useState(() => {
     try {
       const t = localStorage.getItem('tareas_datos');
@@ -431,7 +430,7 @@ function App() {
         </li>
         <li className={`duty-row ${lecturaHoy ? 'realizado' : 'pendiente'}`}>
           <span className="duty-mark">{lecturaHoy ? '✓' : ''}</span>
-          <span className="duty-text"> Lectura bíblica · {totalCapitulos} cap.</span>
+          <span className="duty-text">🌿 Lectura bíblica · {totalCapitulos} cap.</span>
           <span className={`duty-pill ${lecturaHoy ? 'realizado' : 'pendiente'}`}>{lecturaHoy ? 'Realizado' : 'Pendiente'}</span>
         </li>
       </ul>
@@ -562,6 +561,7 @@ function App() {
 
                 <div className="phone-time">
                   <div className="phone-time-row">
+                    <span className="phone-icon">📱</span>
                     <span className="phone-time-label">Tiempo de celular ganado</span>
                     <span className="phone-time-value">{formatearTiempo(minutosGanados)}{totalTareas > 0 && tareasHechas === totalTareas ? ' 🎉' : ''}</span>
                   </div>
@@ -906,13 +906,13 @@ function App() {
           </div>
 
           <div style={{ marginBottom: '14px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>
-            Agenda semanal -  <strong style={{ color: '#4f46e5' }}>{diaSeleccionado}</strong>
+            Mostrando agenda semanal (Día activo destacado: <strong style={{ color: '#4f46e5' }}>{diaSeleccionado}</strong>)
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
             {eventosAgenda.length === 0 ? (
               <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
-                No hay actividades programadas en la agenda. ¡Agrega la primera! 
+                No hay actividades programadas en la agenda. ¡Agrega la primera! 🌈
               </div>
             ) : (
               eventosAgenda.map((ev) => {
@@ -921,37 +921,37 @@ function App() {
 
                 return (
                   <div key={ev.id} style={{
-                    background: esDelDiaSeleccionado ? (esEspiritual ? '#f0fdf4' : '#eff6ff') : '#ffffff',
-                    borderLeft: esDelDiaSeleccionado ? `4px solid ${esEspiritual ? '#16a34a' : '#2563eb'}` : '4px solid #64748b',
+                    background: esDelDiaSeleccionado ? (esEspiritual ? '#d1fae5' : '#ffe4e6') : '#ffffff',
+                    borderLeft: esDelDiaSeleccionado ? `4px solid ${esEspiritual ? '#059669' : '#e11d48'}` : '4px solid #94a3b8',
                     padding: '14px 14px',
-                    borderRadius: '14px',
+                    borderRadius: '16px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-                    border: `1.5px solid ${esDelDiaSeleccionado ? (esEspiritual ? '#86efac' : '#93c5fd') : '#cbd5e1'}`,
-                    minHeight: '90px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    border: `1.5px solid ${esDelDiaSeleccionado ? (esEspiritual ? '#34d399' : '#fb7185') : '#cbd5e1'}`,
+                    minHeight: '100px',
                     boxSizing: 'border-box',
                     opacity: esDelDiaSeleccionado ? 1 : 0.85
                   }}>
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <span style={{
                           fontSize: '10px',
-                          background: esDelDiaSeleccionado ? (esEspiritual ? '#dcfce7' : '#dbeafe') : '#f1f5f9',
-                          color: esDelDiaSeleccionado ? (esEspiritual ? '#15803d' : '#1d4ed8') : '#475569',
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          fontWeight: '600'
+                          background: esDelDiaSeleccionado ? (esEspiritual ? '#a7f3d0' : '#fecdd3') : '#f1f5f9',
+                          color: esDelDiaSeleccionado ? (esEspiritual ? '#065f46' : '#9f1239') : '#475569',
+                          padding: '3px 9px',
+                          borderRadius: '8px',
+                          fontWeight: '800'
                         }}>
-                          {esEspiritual ? 'Espiritual' : 'Hogar'}
+                          {esEspiritual ? '🌿 Espiritual' : '🏠 Hogar'}
                         </span>
-                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#374151' : '#64748b', fontWeight: 'bold' }}>{ev.dia}</span>
+                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#1f2937' : '#64748b', fontWeight: '800' }}>{ev.dia}</span>
                       </div>
-                      <strong style={{ display: 'block', fontSize: '14px', color: esDelDiaSeleccionado ? '#1f2937' : '#334155', marginBottom: '4px', lineHeight: '1.2' }}>{ev.titulo}</strong>
+                      <strong style={{ display: 'block', fontSize: '14px', color: '#1f2937', marginBottom: '4px', lineHeight: '1.3' }}>{ev.titulo}</strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#4b5563' }}>🕒 {ev.hora}</span>
+                      <span style={{ fontSize: '12px', color: '#4b5563', fontWeight: '700' }}>🕒 {ev.hora}</span>
                       {esAdministrador && (
                         <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento" style={{ fontSize: '12px', padding: '2px 6px' }}>✕</button>
                       )}
@@ -978,7 +978,7 @@ function App() {
               <p>Empieza el día con un pensamiento que da ánimo y fortalece.</p>
               {textoLeidoHoy && <p className="done-note">✅ ¡Ya leíste el texto de hoy! Qué buen hábito.</p>}
               <button className="btn-action-main" onClick={abrirTextoDiario}>
-                Abrir Texto Diario 
+                Abrir Texto Diario 📖
               </button>
             </div>
           )}
