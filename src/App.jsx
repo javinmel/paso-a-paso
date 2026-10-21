@@ -179,7 +179,13 @@ function App() {
   const [nuevaHora, setNuevaHora] = useState('6:00 PM');
   const [nuevoTipo, setNuevoTipo] = useState('espiritual');
 
-  const esAdministrador = familia && (nombre === familia.administrador || ['Papá', 'Mamá'].includes(nombre) || familia.rolAdmin === nombre);
+  const miembroActual = miembrosHogar.find(m => m.nombre === nombre);
+  const esAdministrador = familia && (
+    nombre === familia.administrador || 
+    familia.rolAdmin === nombre ||
+    ['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(miembroActual?.rol) ||
+    ['Papá', 'Mamá'].includes(nombre)
+  );
   
   const listaHijos = miembrosHogar.filter(m => 
     m.nombre !== familia?.administrador && 
@@ -632,7 +638,7 @@ function App() {
         </div>
       )}
 
-      {/* VISTA DE LA AGENDA FAMILIAR (REDESIGN CON CALENDARIO HORIZONTAL Y TARJETAS PASTEL) */}
+      {/* VISTA DE LA AGENDA FAMILIAR CON CALENDARIO HORIZONTAL Y CUADRITOS EN DOS COLUMNAS (EN BLANCO / COLOR) */}
       {currentView === 'calendar' && (
         <div className="spiritual-panel">
           <div className="panel-title-row">
@@ -686,48 +692,74 @@ function App() {
             Actividades para: <strong style={{ color: '#1f2937' }}>{diaSeleccionado}</strong>
           </div>
 
-          {/* Cuadros con colores pasteles suaves no saturados */}
-          <div className="agenda-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {eventosAgenda.filter(ev => ev.dia === diaSeleccionado).length === 0 ? (
-              <p className="empty-text">No hay actividades programadas para el {diaSeleccionado}. ¡Agrega la primera! 🌈</p>
-            ) : (
-              eventosAgenda.filter(ev => ev.dia === diaSeleccionado).map((ev) => {
-                const esEspiritual = ev.tipo === 'espiritual';
-                return (
-                  <div key={ev.id} style={{
-                    background: esEspiritual ? '#f0fdf4' : '#eff6ff',
-                    borderLeft: `4px solid ${esEspiritual ? '#22c55e' : '#3b82f6'}`,
-                    padding: '14px 16px',
-                    borderRadius: '14px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-                    border: `1px solid ${esEspiritual ? '#dcfce7' : '#dbeafe'}`
-                  }}>
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '15px', color: '#1f2937', marginBottom: '4px' }}>{ev.titulo}</strong>
-                      <span style={{ fontSize: '13px', color: '#6b7280' }}>🕒 {ev.hora}</span>
+          {/* Cuadritos en dos columnas: los del día activo se ponen de color, el resto en blanco */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {(() => {
+              const eventosDelDia = eventosAgenda.filter(ev => ev.dia === diaSeleccionado);
+              const totalSlots = Math.max(4, Math.ceil(eventosDelDia.length / 2) * 2);
+              const slots = [];
+              for (let i = 0; i < totalSlots; i++) {
+                const ev = eventosDelDia[i];
+                if (ev) {
+                  const esEspiritual = ev.tipo === 'espiritual';
+                  slots.push(
+                    <div key={ev.id} style={{
+                      background: esEspiritual ? '#f0fdf4' : '#eff6ff',
+                      borderLeft: `4px solid ${esEspiritual ? '#22c55e' : '#3b82f6'}`,
+                      padding: '14px 14px',
+                      borderRadius: '14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                      border: `1px solid ${esEspiritual ? '#dcfce7' : '#dbeafe'}`,
+                      minHeight: '90px'
+                    }}>
+                      <div>
+                        <span style={{
+                          fontSize: '10px',
+                          background: esEspiritual ? '#dcfce7' : '#dbeafe',
+                          color: esEspiritual ? '#15803d' : '#1d4ed8',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          display: 'inline-block',
+                          marginBottom: '4px'
+                        }}>
+                          {esEspiritual ? 'Espiritual' : 'Hogar'}
+                        </span>
+                        <strong style={{ display: 'block', fontSize: '14px', color: '#1f2937', marginBottom: '4px', lineHeight: '1.2' }}>{ev.titulo}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                        <span style={{ fontSize: '12px', color: '#6b7280' }}>🕒 {ev.hora}</span>
+                        {esAdministrador && (
+                          <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento" style={{ fontSize: '12px', padding: '2px 6px' }}>✕</button>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{
-                        fontSize: '11px',
-                        background: esEspiritual ? '#dcfce7' : '#dbeafe',
-                        color: esEspiritual ? '#15803d' : '#1d4ed8',
-                        padding: '4px 10px',
-                        borderRadius: '8px',
-                        fontWeight: '600'
-                      }}>
-                        {esEspiritual ? 'Espiritual' : 'Hogar'}
-                      </span>
-                      {esAdministrador && (
-                        <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento">✕</button>
-                      )}
+                  );
+                } else {
+                  // Cuadrito en blanco (disponible)
+                  slots.push(
+                    <div key={`blank-${i}`} style={{
+                      background: '#ffffff',
+                      border: '2px dashed #e2e8f0',
+                      padding: '14px 14px',
+                      borderRadius: '14px',
+                      minHeight: '90px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#cbd5e1',
+                      fontSize: '13px'
+                    }}>
+                      <span>Disponible 🌿</span>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                }
+              }
+              return slots;
+            })()}
           </div>
         </div>
       )}
