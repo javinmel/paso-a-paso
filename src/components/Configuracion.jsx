@@ -3,12 +3,11 @@ import './Configuracion.css';
 import { esRolAdmin, etiquetaRol, nombreBonito, ordenarMiembros } from '../utils/roles';
 import { supabase } from '../supabaseClient';
 
-function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioActual, nombre, onCambiarHogar, onCerrarSesion, onVolver }) {
+function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioActual, nombre, onCambiarHogar, onCerrarSesion }) {
   const listaMiembros = miembros.length > 0 ? miembros : miembrosHogars;
   const usuarioActivo = usuarioActual || nombre;
   const lista = ordenarMiembros(listaMiembros || []);
 
-  // Verificar si el usuario actual es administrador
   const miembroActual = listaMiembros.find(m => m.nombre === usuarioActivo);
   const esAdminActual = esRolAdmin(miembroActual?.rol) || usuarioActivo === familia?.administrador || ['Papá', 'Mamá'].includes(usuarioActivo);
 
@@ -46,37 +45,39 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
   };
 
   return (
-    <div className="config-panel" style={{ width: '100%', maxWidth: '650px', margin: '0 auto', boxSizing: 'border-box' }}>
-      <div className="config-hogar" style={{ width: '100%', boxSizing: 'border-box' }}>
+    <div className="config-panel" style={{ width: '100%', maxWidth: '750px', margin: '0 auto', boxSizing: 'border-box', padding: '20px' }}>
+      <div className="config-hogar" style={{ width: '100%', boxSizing: 'border-box', marginBottom: '20px' }}>
         <span className="config-hogar-label">Tu hogar</span>
         <h2>{nombreBonito(familia?.nombreFamilia)}</h2>
         <p>Comparte este nombre para que otros se unan</p>
       </div>
 
       <section className="config-seccion" style={{ width: '100%', boxSizing: 'border-box' }}>
-        <h4 className="config-titulo">Miembros del hogar ({lista.length})</h4>
+        <h4 className="config-titulo" style={{ marginBottom: '12px' }}>Miembros del hogar ({lista.length})</h4>
 
         {lista.length === 0 ? (
           <p className="config-vacio">Aún no hay miembros en este hogar.</p>
         ) : (
-          <ul className="config-miembros" style={{ width: '100%', boxSizing: 'border-box' }}>
+          <ul className="config-miembros" style={{ width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', padding: 0 }}>
             {lista.map((m) => {
               const admin = esRolAdmin(m.rol);
               return (
-                <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`} style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                    <span className="config-avatar">{(m.nombre || 'U')[0].toUpperCase()}</span>
-                    <div className="config-miembro-info">
-                      <strong>
+                <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`} style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8f9fc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                    <span className="config-avatar" style={{ width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: admin ? '#7e69f8' : '#cbd5e1', color: admin ? '#fff' : '#1e293b', borderRadius: '50%', fontWeight: 'bold', flexShrink: 0 }}>
+                      {(m.nombre || 'U')[0].toUpperCase()}
+                    </span>
+                    <div className="config-miembro-info" style={{ minWidth: 0, flex: 1 }}>
+                      <strong style={{ display: 'block', fontSize: '14px', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {m.nombre}
                         {m.nombre === usuarioActivo && <em> (tú)</em>}
                       </strong>
-                      <small>{etiquetaRol(m.rol)}</small>
+                      <small style={{ color: '#64748b', fontSize: '12px' }}>{etiquetaRol(m.rol)}</small>
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {admin && <span className="config-badge admin">👑 Administrador</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                    {admin && <span className="config-badge admin" style={{ fontSize: '11px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', color: '#475569' }}>👑 Administrador</span>}
                     {esAdminActual && (
                       <button 
                         type="button" 
@@ -103,12 +104,12 @@ function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioAct
         )}
       </section>
 
-      <div className="config-acciones" style={{ width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <button type="button" className="config-btn cambiar" onClick={onCambiarHogar} style={{ width: '100%', boxSizing: 'border-box' }}>
+      <div className="config-acciones" style={{ width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
+        <button type="button" className="config-btn cambiar" onClick={onCambiarHogar} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
           🔄 Cambiar de hogar
         </button>
 
-        <button type="button" className="config-btn salir" onClick={onCerrarSesion} style={{ width: '100%', boxSizing: 'border-box' }}>
+        <button type="button" className="config-btn salir" onClick={onCerrarSesion} style={{ width: '100%', boxSizing: 'border-box', padding: '12px' }}>
           🚪 Cerrar sesión
         </button>
 
