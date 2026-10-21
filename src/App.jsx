@@ -106,7 +106,7 @@ const recursosEmocion = {
   },
   enojo: {
     emoji: '⚡', etiqueta: 'Molesto',
-    titulo: 'Cuando el enojo se siente muy fuerte',
+    titulo: 'Когда el enojo se siente muy fuerte',
     mensaje: 'Sentir enojo no es malo; lo importante es qué hacemos con él. Una respuesta tranquila ayuda a que la paz vuelva al corazón.',
     ref: 'Proverbios 15:1',
     accion: 'Antes de hablar, cuenta hasta 10 y toma un poco de agua 💧',
@@ -170,18 +170,19 @@ function App() {
   const [miembrosHogar, setMiembrosHogar] = useState([]);
 
   const [nuevaTarea, setNuevaTarea] = useState('');
-  const [nuevoOrigen, setNuevoOrigen] = useState('propio');
+  const [nuevoOrigen, setNuevoOrigen] = useState('padres');
   const [nuevoPara, setNuevoPara] = useState('todos');
   const [nuevoTitulo, setNuevoTitulo] = useState('');
   const [nuevoDia, setNuevoDia] = useState('Lunes');
   const [nuevaHora, setNuevaHora] = useState('6:00 PM');
   const [nuevoTipo, setNuevoTipo] = useState('espiritual');
 
-  const esAdministrador = familia && (nombre === familia.administrador);
+  const esAdministrador = familia && (nombre === familia.administrador || ['Papá', 'Mamá'].includes(nombre) || familia.rolAdmin === nombre);
+  
   const listaHijos = miembrosHogar.filter(m => 
-  m.nombre !== familia?.administrador && 
-  !['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(m.rol)
-).map(m => m.nombre);
+    m.nombre !== familia?.administrador && 
+    !['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(m.rol)
+  ).map(m => m.nombre);
 
   useEffect(() => {
     if (!familia) return;
@@ -348,8 +349,8 @@ function App() {
   const agregarTarea = async (e) => {
     e.preventDefault();
     if (!nuevaTarea.trim()) return;
-    const origen = nuevoOrigen;
-    const para = origen === 'padres' ? nuevoPara : nombre;
+    const origen = esAdministrador ? 'padres' : 'propio';
+    const para = esAdministrador ? nuevoPara : nombre;
     
     const nuevaObj = {
       texto: nuevaTarea.trim(),
@@ -413,7 +414,7 @@ function App() {
             {currentView === 'config' && 'Configuración'}
             {currentView === 'spiritual' && 'Guía y Bienestar'}
             {currentView === 'calendar' && 'Agenda Familiar'}
-            {currentView === 'tareas' && 'Mis Deberes'}
+            {currentView === 'tareas' && (esAdministrador ? 'Asignar Deberes' : 'Mis Deberes')}
             {currentView === 'home' && (familia ? familia.nombreFamilia : 'Paso a Paso')}
           </span>
         </div>
@@ -422,13 +423,11 @@ function App() {
         </div>
       </header>
 
-  {/* MÓDULO DE CONFIGURACIÓN SEPARADO */}
+      {/* MÓDULO DE CONFIGURACIÓN SEPARADO */}
       {currentView === 'config' && (
         <Configuracion 
           familia={familia}
-          miembrosHogars={miembrosHogars} 
-          // O cámbiala directamente a:
-          // miembrosHogars={miembrosHogar}
+          miembrosHogars={miembrosHogars}
           onCambiarHogar={cambiarHogar}
           onCerrarSesion={cerrarSesion}
           onVolver={() => setCurrentView('home')}
@@ -563,7 +562,7 @@ function App() {
           <div className="grid-buttons">
             <button className="action-btn btn-tareas" onClick={() => setCurrentView('tareas')}>
               <span className="btn-icon">📌</span>
-              <span className="btn-text">Deberes y Tareas</span>
+              <span className="btn-text">{esAdministrador ? 'Asignar Deberes' : 'Deberes y Tareas'}</span>
             </button>
             <button className="action-btn btn-spiritual" onClick={() => setCurrentView('spiritual')}>
               <span className="btn-icon">📖</span>
@@ -577,35 +576,33 @@ function App() {
         </>
       )}
 
-      {/* VISTA DE DEBERES */}
+      {/* VISTA DE DEBERES / ASIGNACIÓN */}
       {currentView === 'tareas' && (
         <div className="tasks-board-section">
           <div className="tasks-board-header">
-            <h3>📌 Mis deberes</h3>
-            <span className="tasks-subtitle">{mensajeProgreso()}</span>
-            <span className="tasks-subtitle">📱 Cada deber cumplido suma {MIN_POR_TAREA} min de celular</span>
+            <h3>{esAdministrador ? '📝 Asignar Deberes a los Hijos' : '📌 Mis deberes'}</h3>
+            <span className="tasks-subtitle">{esAdministrador ? 'Crea tareas y asígnalas a tus hijos' : mensajeProgreso()}</span>
           </div>
 
-          <div className="progress-track" aria-label={`Progreso ${porcentaje}%`}>
-            <div className="progress-fill" style={{ width: `${porcentaje}%` }}></div>
-          </div>
+          {!esAdministrador && (
+            <div className="progress-track" aria-label={`Progreso ${porcentaje}%`}>
+              <div className="progress-fill" style={{ width: `${porcentaje}%` }}></div>
+            </div>
+          )}
 
           <div className="tasks-grid-container">
-            {tareasOrdenadas.map(tarea => (
+            {tareasDeberes.map(tarea => (
               <div key={tarea.id} className={`task-item-card ${tarea.estado}`}>
                 <div className="task-info">
                   <span className="task-text">{tarea.texto}</span>
-                  {tarea.origen === 'padres' && (
-                    <span className="task-origin">👨‍👩‍👧 De papá o mamá{tarea.para && tarea.para !== 'todos' ? ` · para ${tarea.para}` : ''}</span>
-                  )}
+                  <span className="task-origin">
+                    {tarea.origen === 'padres' ? `👨‍👩‍👧 Asignado a: ${tarea.para}` : `🧒 Creado por ${tarea.origen}`}
+                  </span>
                   <span className={`task-badge ${tarea.estado}`}>
-                    {tarea.estado === 'pendiente' ? '⏳ Por hacer' : '✅ ¡Hecho!'}
+                    {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
                   </span>
                 </div>
                 <div className="task-actions">
-                  <button className={`task-toggle-btn ${tarea.estado}`} onClick={() => toggleEstadoTarea(tarea.id)}>
-                    {tarea.estado === 'pendiente' ? 'Completar' : 'Reabrir'}
-                  </button>
                   <button className="task-delete-btn" onClick={() => eliminarTarea(tarea.id)} aria-label="Eliminar deber">✕</button>
                 </div>
               </div>
@@ -616,23 +613,19 @@ function App() {
             <input
               type="text"
               className="input-custom"
-              placeholder="Nuevo deber (Ej: Ordenar mi cuarto)"
+              placeholder={esAdministrador ? "Escribe la tarea para tus hijos..." : "Nuevo deber (Ej: Ordenar mi cuarto)"}
               value={nuevaTarea}
               onChange={(e) => setNuevaTarea(e.target.value)}
             />
             <button type="submit" className="btn-add-event">+ Agregar</button>
-            <div className="task-options">
-              <select className="select-custom" value={nuevoOrigen} onChange={(e) => setNuevoOrigen(e.target.value)}>
-                <option value="propio">🧒 Lo pongo yo</option>
-                <option value="padres">👨‍👩‍👧 Lo ponen papá o mamá</option>
-              </select>
-              {nuevoOrigen === 'padres' && (
+            {esAdministrador && (
+              <div className="task-options">
                 <select className="select-custom" value={nuevoPara} onChange={(e) => setNuevoPara(e.target.value)}>
                   <option value="todos">Para todos los hijos</option>
                   {listaHijos.map(h => <option key={h} value={h}>Para {h}</option>)}
                 </select>
-              )}
-            </div>
+              </div>
+            )}
           </form>
         </div>
       )}
@@ -642,10 +635,12 @@ function App() {
         <div className="spiritual-panel">
           <div className="panel-title-row">
             <h3>📅 Horarios y Actividades</h3>
-            <button className="btn-add-event" onClick={() => setIsEventModalOpen(true)}>+ Nuevo Evento</button>
+            {esAdministrador && (
+              <button className="btn-add-event" onClick={() => setIsEventModalOpen(true)}>+ Nuevo Evento</button>
+            )}
           </div>
           <div className="agenda-list">
-            {eventosAgenda.length === 0 && <p className="empty-text">Aún no hay actividades. ¡Agrega la primera! 🌈</p>}
+            {eventosAgenda.length === 0 && <p className="empty-text">Aún no hay actividades programadas. 🌈</p>}
             {eventosAgenda.map((ev) => (
               <div key={ev.id} className={`agenda-card ${ev.tipo}`}>
                 <div className="agenda-info">
@@ -654,7 +649,9 @@ function App() {
                 </div>
                 <div className="agenda-side">
                   <span className={`badge-type ${ev.tipo}`}>{ev.tipo === 'espiritual' ? '🟢 Espiritual' : '🔵 Hogar'}</span>
-                  <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento">✕</button>
+                  {esAdministrador && (
+                    <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento">✕</button>
+                  )}
                 </div>
               </div>
             ))}
