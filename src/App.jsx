@@ -4,6 +4,7 @@ import Onboarding from './components/Onboarding';
 import Configuracion from './components/Configuracion';
 import { supabase } from './supabaseClient';
 import { esRolAdmin, etiquetaRol } from './utils/roles';
+import { comprimirImagen, subirEvidencia } from './utils/evidencias';
 
 const fechaHoy = () => new Date().toLocaleDateString('en-CA');
 const MIN_POR_TAREA = 15;
@@ -99,7 +100,7 @@ const recursosEmocion = {
   },
   desilusion: {
     emoji: '😞', etiqueta: 'Desilusionado',
-    titulo: 'Cuando algo no salió como esperabas',
+    titulo: 'Когда algo no salió como esperabas',
     mensaje: 'Equivocarse o que algo salga mal no define quién eres. Lo importante es que sigues intentándolo con ánimo.',
     ref: 'Salmo 55:22',
     accion: 'Piensa en algo que sí salió bien hoy, aunque sea pequeñito 🌱',
@@ -152,6 +153,7 @@ function App() {
   const [pasoAudio, setPasoAudio] = useState('libros');
   const [libroElegido, setLibroElegido] = useState(null);
   const [emocionSeleccionada, setEmocionSeleccionada] = useState(null);
+  const [imagenPreviewUrl, setImagenPreviewUrl] = useState(null);
 
   const [nombre, setNombre] = useState(() => {
     try {
@@ -190,7 +192,6 @@ function App() {
     nombre === familia.administrador || esRolAdmin(miembroActual?.rol)
   );
 
-  // Rol que se muestra junto al nombre: Papá, Mamá o Hijo
   const rolVisible = etiquetaRol(miembroActual?.rol ?? (esAdministrador ? familia?.rolAdmin : 'Hijo'));
   
   const listaHijos = miembrosHogar.filter(m => 
@@ -266,14 +267,12 @@ function App() {
     localStorage.setItem('nombre_usuario', JSON.stringify(usuarioNombre));
   };
 
-  // Cerrar sesión: se queda en el hogar y vuelve a la lista de miembros
   const cerrarSesion = () => {
     localStorage.removeItem('nombre_usuario');
     setNombre(null);
     setCurrentView('home');
   };
 
-  // Cambiar de hogar: vuelve al inicio para entrar a otro hogar o crear uno
   const cambiarHogar = () => {
     localStorage.removeItem('familia_datos');
     localStorage.removeItem('nombre_usuario');
@@ -405,7 +404,6 @@ function App() {
     await supabase.from('agenda').delete().eq('id', id);
   };
 
-  // Tablero de actividades espirituales: igual para papás e hijos
   const tableroEspiritual = (
     <div className="board-box">
       <div className="board-title">Actividades espirituales</div>
@@ -428,7 +426,6 @@ function App() {
     <div className="app-container">
       {(!familia || !nombre) && <Onboarding familiaInicial={familia} onFamiliaCreada={manejarFamiliaCreada} />}
 
-      {/* Barra superior */}
       <header className="app-header">
         <div className="header-left">
           {currentView !== 'home' ? (
@@ -452,7 +449,6 @@ function App() {
         </div>
       </header>
 
-      {/* MÓDULO DE CONFIGURACIÓN SEPARADO */}
       {currentView === 'config' && (
         <Configuracion
           familia={familia}
@@ -463,7 +459,6 @@ function App() {
         />
       )}
 
-      {/* VISTA PRINCIPAL */}
       {currentView === 'home' && (
         <>
           {esAdministrador ? (
@@ -593,7 +588,7 @@ function App() {
         </>
       )}
 
-    {/* VISTA DE DEBERES / ASIGNACIÓN */}
+      {/* VISTA DE DEBERES / ASIGNACIÓN */}
       {currentView === 'tareas' && (
         <div className="tasks-board-section">
           <div className="tasks-board-header">
@@ -646,7 +641,6 @@ function App() {
                                   position: 'relative'
                                 }}
                               >
-                                {/* X para borrar arriba a la derecha si fue creada por el hijo o es admin */}
                                 {(esAdministrador || esSuTareaCreada) && (
                                   <button 
                                     type="button" 
@@ -659,12 +653,10 @@ function App() {
                                   </button>
                                 )}
 
-                                {/* Título de la tarea arriba, más grande y resaltado */}
                                 <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.3' }}>
                                   {tarea.texto}
                                 </span>
 
-                                {/* Línea inferior: Autoría */}
                                 <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700' }}>
                                   {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
                                 </span>
@@ -681,7 +673,6 @@ function App() {
                                   </div>
                                 )}
 
-                                {/* Marcar pendiente o hecho y palabras de estado */}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                                   <button 
                                     type="button"
@@ -735,7 +726,6 @@ function App() {
                         position: 'relative'
                       }}
                     >
-                      {/* X para borrar arriba a la derecha si es del hijo */}
                       {puedeBorrar && (
                         <button 
                           type="button" 
@@ -748,12 +738,10 @@ function App() {
                         </button>
                       )}
 
-                      {/* Título de la tarea arriba, más grande y resaltado */}
                       <span style={{ fontSize: '15px', fontWeight: '900', color: '#1f2937', paddingRight: '24px', lineHeight: '1.3' }}>
                         {tarea.texto}
                       </span>
 
-                      {/* Línea inferior: Autoría */}
                       <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '700' }}>
                         {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
                       </span>
@@ -785,7 +773,7 @@ function App() {
                             {esRealizado ? 'Marcar Pendiente' : 'Marcar Hecho'}
                           </button>
 
-                          {/* Tomar foto con cámara */}
+                          {/* Tomar foto comprimida y subida a Supabase Storage */}
                           <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ede8ff', color: '#7e69f8', padding: '7px 12px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                             📷 Tomar foto
                             <input 
@@ -796,20 +784,22 @@ function App() {
                               onChange={async (e) => {
                                 const archivo = e.target.files[0];
                                 if (!archivo) return;
-                                const lector = new FileReader();
-                                lector.onload = async (uploadEv) => {
-                                  const urlBase64 = uploadEv.target.result;
-                                  await supabase.from('tareas').update({ evidencia_url: urlBase64 }).eq('id', tarea.id);
-                                  setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlBase64 } : t));
-                                  alert('¡Foto de evidencia enviada con éxito a tus papás!');
-                                };
-                                lector.readAsDataURL(archivo);
+                                try {
+                                  alert('Subiendo foto de evidencia...');
+                                  const archivoComprimido = await comprimirImagen(archivo, 800, 0.6);
+                                  const urlPublica = await subirEvidencia(familia.nombreFamilia, tarea.id, archivoComprimido);
+                                  
+                                  await supabase.from('tareas').update({ evidencia_url: urlPublica }).eq('id', tarea.id);
+                                  setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlPublica } : t));
+                                  alert('¡Foto de evidencia enviada con éxito!');
+                                } catch (err) {
+                                  alert(err.message || 'No se pudo subir la foto.');
+                                }
                               }}
                             />
                           </label>
                         </div>
 
-                        {/* Palabras de hecho o pendiente abajo */}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                           <span style={{ fontSize: '12px', fontWeight: 'bold', color: esRealizado ? '#059669' : '#d97706' }}>
                             {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
@@ -844,7 +834,6 @@ function App() {
         </div>
       )}
 
-      {/* VISTA DE LA AGENDA FAMILIAR: DOS COLUMNAS, DÍA SELECCIONADO EN COLOR Y RESTO EN BLANCO */}
       {currentView === 'calendar' && (
         <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box' }}>
           <div className="panel-title-row">
@@ -854,7 +843,6 @@ function App() {
             )}
           </div>
 
-          {/* Calendario horizontal de la semana */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -900,7 +888,6 @@ function App() {
             Mostrando agenda semanal (Día activo destacado: <strong style={{ color: '#4f46e5' }}>{diaSeleccionado}</strong>)
           </div>
 
-          {/* Cuadritos en dos columnas: el día seleccionado va en color, los demás días van en blanco */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
             {eventosAgenda.length === 0 ? (
               <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
@@ -956,7 +943,6 @@ function App() {
         </div>
       )}
 
-      {/* VISTA DEL PANEL ESPIRITUAL */}
       {currentView === 'spiritual' && (
         <div className="spiritual-panel">
           <div className="tabs-container">
@@ -1065,7 +1051,6 @@ function App() {
         </div>
       )}
 
-      {/* MODAL NUEVO EVENTO */}
       {isEventModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -1091,7 +1076,6 @@ function App() {
         </div>
       )}
 
-      {/* MODAL DE CONFIRMACIÓN */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -1102,6 +1086,19 @@ function App() {
               <button className="btn-cancelar" onClick={() => setIsModalOpen(false)}>Aún no</button>
               <button className="btn-confirmar" onClick={confirmarLectura}>¡Sí, listo! 🟢</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL VISOR DE FOTO DE EVIDENCIA */}
+      {imagenPreviewUrl && (
+        <div className="modal-overlay" onClick={() => setImagenPreviewUrl(null)}>
+          <div className="modal-card" style={{ maxWidth: '90vw', width: '380px', padding: '20px' }} onClick={e => e.stopPropagation()}>
+            <h3>Foto de Evidencia</h3>
+            <div style={{ width: '100%', maxHeight: '65vh', overflow: 'hidden', borderRadius: '12px', margin: '10px 0', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={imagenPreviewUrl} alt="Evidencia completa" style={{ width: '100%', height: 'auto', maxHeight: '60vh', objectFit: 'contain' }} />
+            </div>
+            <button className="btn-confirmar" onClick={() => setImagenPreviewUrl(null)} style={{ width: '100%' }}>Cerrar</button>
           </div>
         </div>
       )}
