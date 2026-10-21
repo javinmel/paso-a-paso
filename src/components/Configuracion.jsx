@@ -2,16 +2,15 @@ import React from 'react';
 
 function Configuracion({ familia, miembrosHogars = [], onCambiarHogar, onCerrarSesion, onVolver }) {
   const miembros = miembrosHogars || [];
-  // ... resto del código
 
   return (
-    <div className="spiritual-panel">
+    <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box' }}>
       <div className="panel-title-row">
         <h3>⚙️ Configuración</h3>
         <button className="icon-btn" onClick={onVolver}>⬅️</button>
       </div>
 
-      <div className="tab-content" style={{ textAlign: 'left' }}>
+      <div className="tab-content" style={{ textAlign: 'left', width: '100%', boxSizing: 'border-box' }}>
         <div style={{
           background: '#2b2d42',
           color: '#fff',
@@ -32,7 +31,7 @@ function Configuracion({ familia, miembrosHogars = [], onCambiarHogar, onCerrarS
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {miembros.map((m) => {
               const rolStr = m.rol || 'Miembro';
-              const esAdmin = m.nombre === familia?.administrador || ['Papá', 'Mamá'].includes(rolStr);
+              const esAdmin = m.nombre === familia?.administrador || ['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(rolStr);
               return (
                 <div key={m.id || m.nombre} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8f9fc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <span style={{
@@ -40,7 +39,7 @@ function Configuracion({ familia, miembrosHogars = [], onCambiarHogar, onCerrarS
                     color: esAdmin ? '#fff' : '#1e293b',
                     width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 'bold', fontSize: '15px'
                   }}>
-                    {m.nombre[0].toUpperCase()}
+                    {m.nombre ? m.nombre[0].toUpperCase() : 'U'}
                   </span>
                   <div style={{ flex: 1 }}>
                     <strong style={{ display: 'block', fontSize: '14px', color: '#1e293b' }}>{m.nombre}</strong>
