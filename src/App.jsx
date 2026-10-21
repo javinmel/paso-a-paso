@@ -16,18 +16,6 @@ const formatearTiempo = (min) => {
   return m === 0 ? `${h} h` : `${h} h ${m} min`;
 };
 
-const formatearFechaAmigable = (fechaStr) => {
-  if (!fechaStr) return '';
-  const partes = fechaStr.split('-');
-  if (partes.length === 3) {
-    const [anio, mes, dia] = partes;
-    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    const nombreMes = meses[parseInt(mes, 10) - 1] || '';
-    return `${parseInt(dia, 10)} de ${nombreMes} de ${anio}`;
-  }
-  return fechaStr;
-};
-
 const saludos = [
   '¡Qué alegría verte de vuelta!',
   '¿Cómo está lo más lindo de la casa?',
@@ -112,7 +100,7 @@ const recursosEmocion = {
   },
   desilusion: {
     emoji: '😞', etiqueta: 'Desilusionado',
-    titulo: 'Когда algo no salió como esperabas',
+    titulo: 'Cuando algo no salió como esperabas',
     mensaje: 'Equivocarse o que algo salga mal no define quién eres. Lo importante es que sigues intentándolo con ánimo.',
     ref: 'Salmo 55:22',
     accion: 'Piensa en algo que sí salió bien hoy, aunque sea pequeñito 🌱',
@@ -180,9 +168,17 @@ function App() {
   const diaHoy = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][new Date().getDay()];
   const [diaSeleccionado, setDiaSeleccionado] = useState(diaHoy === 'Domingo' ? 'Lunes' : diaHoy);
 
-  // Estados para Actividades Lejanas
+  // Estado para actividades lejanas
   const [tituloLejana, setTituloLejana] = useState('');
   const [fechaLejana, setFechaLejana] = useState(fechaHoy());
+  const [actividadesLejanas, setActividadesLejanas] = useState(() => {
+    try {
+      const l = localStorage.getItem('actividades_lejanas');
+      return l ? JSON.parse(l) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const diaDelMes = new Date().getDate();
   const fraseActual = bancoFrasesMensual[(diaDelMes - 1) % bancoFrasesMensual.length];
@@ -324,7 +320,7 @@ function App() {
     ...tareasVisibles.filter(t => t.estado === 'realizado')
   ];
   
-  const eventosHoy = eventosAgenda.filter(ev => ev.dia === diaHoy && ev.tipo !== 'lejana');
+  const eventosHoy = eventosAgenda.filter(ev => ev.dia === diaHoy);
 
   const mensajeProgreso = () => {
     if (totalTareas === 0) return 'Agrega tu primer deber para comenzar 🌱';
@@ -436,25 +432,21 @@ function App() {
     await supabase.from('agenda').delete().eq('id', id);
   };
 
-  const agregarActividadLejana = async (e) => {
+  const agregarActividadLejana = (e) => {
     e.preventDefault();
     if (!tituloLejana.trim()) return;
-    
-    const nuevoObj = {
-      titulo: tituloLejana.trim(),
-      dia: fechaLejana, // Usamos dia para almacenar la fecha YYYY-MM-DD
-      hora: 'Próximamente',
-      tipo: 'lejana',
-      familia: familia.nombreFamilia
-    };
-
+    const nuevaLejana = { id: Date.now(), titulo: tituloLejana.trim(), fecha: fechaLejana };
+    const actualizadas = [nuevaLejana, ...actividadesLejanas];
+    setActividadesLejanas(actualizadas);
+    localStorage.setItem('actividades_lejanas', JSON.stringify(actualizadas));
     setTituloLejana('');
     setIsLejanaModalOpen(false);
+  };
 
-    const { data } = await supabase.from('agenda').insert([nuevoObj]).select();
-    if (data) {
-      setEventosAgenda(prev => [data[0], ...prev]);
-    }
+  const eliminarActividadLejana = (id) => {
+    const actualizadas = actividadesLejanas.filter(a => a.id !== id);
+    setActividadesLejanas(actualizadas);
+    localStorage.setItem('actividades_lejanas', JSON.stringify(actualizadas));
   };
 
   const tableroEspiritual = (
@@ -894,35 +886,32 @@ function App() {
       )}
 
       {currentView === 'calendar' && (
-        <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box', background: '#fdfcfe', padding: '0 0 16px 0', border: 'none', boxShadow: 'none' }}>
+        <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box', background: '#fdfcfe' }}>
           
-          {/* Franela Lila que va de extremo a extremo de la pantalla */}
+          {/* Franja lila viva superior */}
           <div style={{
-            background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
-            width: '100vw',
-            marginLeft: 'calc(-50vw + 50%)',
-            marginRight: 'calc(-50vw + 50%)',
-            padding: '16px 20px',
+            background: 'linear-gradient(135deg, #a855f7 0%, #7e69f8 100%)',
+            padding: '12px 16px',
+            borderRadius: '16px',
             color: '#ffffff',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '16px',
-            boxSizing: 'border-box',
-            boxShadow: '0 4px 15px rgba(168, 85, 247, 0.25)'
+            marginBottom: '14px',
+            boxShadow: '0 4px 12px rgba(126, 105, 248, 0.25)'
           }}>
-            <h3 style={{ color: '#ffffff', fontSize: '19px', fontWeight: '900', margin: 0 }}>📅 Agenda Familiar</h3>
+            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '800', margin: 0 }}>📅 Agenda Familiar</h3>
             {esAdministrador && (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button 
                   onClick={() => setIsEventModalOpen(true)}
-                  style={{ background: '#ffffff', color: '#9333ea', border: 'none', padding: '7px 12px', borderRadius: '10px', fontWeight: '800', fontSize: '12px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+                  style={{ background: '#ffffff', color: '#7e69f8', border: 'none', padding: '6px 12px', borderRadius: '10px', fontWeight: '800', fontSize: '12px' }}
                 >
                   + Nuevo Evento
                 </button>
                 <button 
                   onClick={() => setIsLejanaModalOpen(true)}
-                  style={{ background: '#f59e0b', color: '#ffffff', border: 'none', padding: '7px 12px', borderRadius: '10px', fontWeight: '800', fontSize: '12px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+                  style={{ background: '#f59e0b', color: '#ffffff', border: 'none', padding: '6px 12px', borderRadius: '10px', fontWeight: '800', fontSize: '12px' }}
                 >
                   📅 Actividades Lejanas
                 </button>
@@ -930,147 +919,140 @@ function App() {
             )}
           </div>
 
-          <div style={{ padding: '0 14px' }}>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              background: '#f8fafc', 
-              padding: '10px 8px', 
-              borderRadius: '14px', 
-              marginBottom: '16px', 
-              overflowX: 'auto',
-              border: '1.5px solid #cbd5e1',
-              gap: '6px',
-              width: '100%',
-              boxSizing: 'border-box'
-            }}>
-              {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((d) => {
-                const activo = diaSeleccionado === d;
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDiaSeleccionado(d)}
-                    style={{
-                      background: activo ? '#4f46e5' : '#ffffff',
-                      color: activo ? '#ffffff' : '#475569',
-                      border: activo ? 'none' : '1.5px solid #94a3b8',
-                      padding: '8px 10px',
-                      borderRadius: '10px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      flex: '1',
-                      textAlign: 'center',
-                      boxShadow: activo ? '0 4px 10px rgba(79, 70, 229, 0.2)' : 'none'
-                    }}
-                  >
-                    <div style={{ fontSize: '10px', textTransform: 'uppercase', opacity: 0.8 }}>{d.slice(0, 3)}</div>
-                    <div style={{ fontSize: '14px', marginTop: '2px' }}>{d[0]}</div>
-                  </button>
-                );
-              })}
-            </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            background: '#f8fafc', 
+            padding: '10px 8px', 
+            borderRadius: '14px', 
+            marginBottom: '16px', 
+            overflowX: 'auto',
+            border: '1.5px solid #cbd5e1',
+            gap: '6px',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((d) => {
+              const activo = diaSeleccionado === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDiaSeleccionado(d)}
+                  style={{
+                    background: activo ? '#4f46e5' : '#ffffff',
+                    color: activo ? '#ffffff' : '#475569',
+                    border: activo ? 'none' : '1.5px solid #94a3b8',
+                    padding: '8px 10px',
+                    borderRadius: '10px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    flex: '1',
+                    textAlign: 'center',
+                    boxShadow: activo ? '0 4px 10px rgba(79, 70, 229, 0.2)' : 'none'
+                  }}
+                >
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', opacity: 0.8 }}>{d.slice(0, 3)}</div>
+                  <div style={{ fontSize: '14px', marginTop: '2px' }}>{d[0]}</div>
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Cuadritos de eventos muy juntos */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '100%', boxSizing: 'border-box' }}>
-              {eventosHoy.length === 0 ? (
-                <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '25px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
-                  No hay actividades programadas para este día. ¡Agrega la primera! 🌈
-                </div>
-              ) : (
-                eventosHoy.map((ev) => {
-                  const esEspiritual = ev.tipo === 'espiritual';
-
-                  return (
-                    <div key={ev.id} className="agenda-post-it" style={{
-                      background: esEspiritual ? '#d1fae5' : '#ffe4e6',
-                      border: `1.5px solid ${esEspiritual ? '#34d399' : '#fb7185'}`,
-                    }}>
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '6px',
-                        background: esEspiritual ? '#059669' : '#e11d48'
-                      }} />
-
-                      <div style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '14px', opacity: 0.85 }}>
-                        📌
-                      </div>
-
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', marginTop: '4px' }}>
-                          <span style={{
-                            fontSize: '10px',
-                            background: esEspiritual ? '#a7f3d0' : '#fecdd3',
-                            color: esEspiritual ? '#065f46' : '#9f1239',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
-                            fontWeight: '800'
-                          }}>
-                            {esEspiritual ? 'Espiritual' : 'Hogar'}
-                          </span>
-                          <span style={{ fontSize: '11px', color: '#1f2937', fontWeight: '800', marginRight: '16px' }}>{ev.dia}</span>
-                        </div>
-                        <strong style={{ display: 'block', fontSize: '13px', color: '#1f2937', marginBottom: '2px', lineHeight: '1.2' }}>{ev.titulo}</strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                        <span style={{ fontSize: '11px', color: '#4b5563', fontWeight: '700' }}>🕒 {ev.hora}</span>
-                        {esAdministrador && (
-                          <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento" style={{ fontSize: '11px', padding: '2px 6px' }}>✕</button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* SECCIÓN DE ACTIVIDADES LEJANAS HORIZONTALES EN LA PARTE INFERIOR CON COLORES VARIADOS (AZUL, AMARILLO, ROSADO) */}
-            {eventosAgenda.filter(ev => ev.tipo === 'lejana').length > 0 && (
-              <div style={{ marginTop: '22px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <h4 style={{ fontSize: '14px', color: '#423267', fontWeight: '900', textAlign: 'left' }}>🌟 Actividades Lejanas y Proyectos</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {eventosAgenda.filter(ev => ev.tipo === 'lejana').map((act, index) => {
-                    const coloresVivos = [
-                      { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' }, // Rosado
-                      { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' }, // Azul
-                      { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' }  // Amarillo
-                    ];
-                    const col = coloresVivos[index % coloresVivos.length];
-
-                    return (
-                      <div key={act.id} style={{
-                        background: col.bg,
-                        border: `1.5px solid ${col.border}`,
-                        padding: '12px 14px',
-                        borderRadius: '16px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        boxShadow: '0 3px 10px rgba(0,0,0,0.04)'
-                      }}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '5px', background: col.top }} />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' }}>
-                          <strong style={{ fontSize: '14px', color: '#1f2937', fontWeight: '900' }}>{act.titulo}</strong>
-                          <span style={{ fontSize: '12px', color: '#374151', fontWeight: '700' }}>
-                            📅 {formatearFechaAmigable(act.dia)}
-                          </span>
-                        </div>
-                        {esAdministrador && (
-                          <button className="task-delete-btn" onClick={() => eliminarEvento(act.id)} aria-label="Eliminar actividad" style={{ fontSize: '12px', padding: '2px 6px' }}>✕</button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+          {/* Cuadritos de eventos muy juntos */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
+            {eventosAgenda.length === 0 ? (
+              <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '25px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
+                No hay actividades programadas en la agenda. ¡Agrega la primera! 🌈
               </div>
+            ) : (
+              eventosAgenda.map((ev) => {
+                const esDelDiaSeleccionado = ev.dia === diaSeleccionado;
+                const esEspiritual = ev.tipo === 'espiritual';
+
+                return (
+                  <div key={ev.id} className="agenda-post-it" style={{
+                    background: esDelDiaSeleccionado ? (esEspiritual ? '#d1fae5' : '#ffe4e6') : '#ffffff',
+                    border: `1.5px solid ${esDelDiaSeleccionado ? (esEspiritual ? '#34d399' : '#fb7185') : '#cbd5e1'}`,
+                    opacity: esDelDiaSeleccionado ? 1 : 0.85
+                  }}>
+                    {/* Franja superior oscura típica de nota adhesiva */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '6px',
+                      background: esEspiritual ? '#059669' : '#e11d48'
+                    }} />
+
+                    {/* Tachuela / Pin decorativo */}
+                    <div style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '14px', opacity: 0.85 }}>
+                      📌
+                    </div>
+
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', marginTop: '4px' }}>
+                        <span style={{
+                          fontSize: '10px',
+                          background: esDelDiaSeleccionado ? (esEspiritual ? '#a7f3d0' : '#fecdd3') : '#f1f5f9',
+                          color: esDelDiaSeleccionado ? (esEspiritual ? '#065f46' : '#9f1239') : '#475569',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontWeight: '800'
+                        }}>
+                          {esEspiritual ? 'Espiritual' : 'Hogar'}
+                        </span>
+                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#1f2937' : '#64748b', fontWeight: '800', marginRight: '16px' }}>{ev.dia}</span>
+                      </div>
+                      <strong style={{ display: 'block', fontSize: '13px', color: '#1f2937', marginBottom: '2px', lineHeight: '1.2' }}>{ev.titulo}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                      <span style={{ fontSize: '11px', color: '#4b5563', fontWeight: '700' }}>🕒 {ev.hora}</span>
+                      {esAdministrador && (
+                        <button className="task-delete-btn" onClick={() => eliminarEvento(ev.id)} aria-label="Eliminar evento" style={{ fontSize: '11px', padding: '2px 6px' }}>✕</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
+
+          {/* SECCIÓN DE ACTIVIDADES LEJANAS EN LA PARTE INFERIOR (FUERA DEL CUADRO) */}
+          {actividadesLejanas.length > 0 && (
+            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <h4 style={{ fontSize: '14px', color: '#423267', fontWeight: '800', textAlign: 'left' }}>🌟 Actividades Lejanas y Proyectos</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {actividadesLejanas.map((act) => (
+                  <div key={act.id} style={{
+                    background: 'linear-gradient(135deg, #ede8ff 0%, #fef3c7 100%)',
+                    border: '1.5px solid #d8b4fe',
+                    padding: '10px 14px',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span>📌</span>
+                      <strong style={{ fontSize: '13px', color: '#3f315e' }}>{act.titulo}</strong>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '12px', background: '#ffffff', padding: '3px 8px', borderRadius: '8px', fontWeight: 'bold', color: '#7e69f8', border: '1px solid #ebdffc' }}>
+                        📅 {act.fecha}
+                      </span>
+                      {esAdministrador && (
+                        <button className="task-delete-btn" onClick={() => eliminarActividadLejana(act.id)} aria-label="Eliminar actividad">✕</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1208,7 +1190,7 @@ function App() {
         </div>
       )}
 
-      {/* MODAL ACTIVIDAD LEJANA (ABRE CALENDARIO AUTOMÁTICAMENTE) */}
+      {/* MODAL ACTIVIDAD LEJANA */}
       {isLejanaModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -1216,14 +1198,14 @@ function App() {
             <form onSubmit={agregarActividadLejana} className="modal-form">
               <input 
                 type="text" 
-                placeholder="Título de la actividad" 
+                placeholder="Título del evento (Ej: Vacaciones)" 
                 value={tituloLejana} 
                 onChange={(e) => setTituloLejana(e.target.value)} 
                 className="input-custom" 
                 required 
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#736298' }}>Fecha del evento:</label>
+                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#736298' }}>Selecciona la fecha:</label>
                 <input 
                   type="date" 
                   value={fechaLejana} 
