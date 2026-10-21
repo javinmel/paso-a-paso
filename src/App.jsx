@@ -446,16 +446,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Botón directo para ingresar a Configuración */}
-              <button 
-                type="button"
-                className="btn-action-main" 
-                onClick={() => setCurrentView('config')} 
-                style={{ backgroundColor: '#4f46e5', color: '#fff', marginBottom: '16px', borderRadius: '12px' }}
-              >
-                ⚙️ Configuración y Miembros del Hogar
-              </button>
-
               <div className="board-box">
                 <div className="board-title">👥 Estado de los Hijos</div>
                 {listaHijos.length === 0 ? (
@@ -640,7 +630,7 @@ function App() {
         </div>
       )}
 
-      {/* VISTA DE LA AGENDA FAMILIAR CON ANCHO AJUSTADO, DOS COLUMNAS Y SIN "DISPONIBLE" */}
+      {/* VISTA DE LA AGENDA FAMILIAR: DOS COLUMNAS, DÍA SELECCIONADO EN COLOR Y RESTO EN BLANCO */}
       {currentView === 'calendar' && (
         <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box' }}>
           <div className="panel-title-row">
@@ -693,51 +683,50 @@ function App() {
           </div>
 
           <div style={{ marginBottom: '14px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>
-            Actividades para el día: <strong style={{ color: '#1f2937' }}>{diaSeleccionado}</strong>
+            Mostrando agenda semanal (Día activo destacado: <strong style={{ color: '#4f46e5' }}>{diaSeleccionado}</strong>)
           </div>
 
-          {/* Cuadritos en dos columnas con el día mostrado, sin relleno "Disponible" */}
+          {/* Cuadritos en dos columnas: el día seleccionado va en color, los demás días van en blanco */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', boxSizing: 'border-box' }}>
-            {(() => {
-              const eventosDelDia = eventosAgenda.filter(ev => ev.dia === diaSeleccionado);
-              if (eventosDelDia.length === 0) {
-                return (
-                  <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-                    No hay actividades programadas para el {diaSeleccionado}. ¡Agrega la primera! 🌈
-                  </div>
-                );
-              }
-              return eventosDelDia.map((ev) => {
+            {eventosAgenda.length === 0 ? (
+              <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '30px', color: '#64748b', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                No hay actividades programadas en la agenda. ¡Agrega la primera! 🌈
+              </div>
+            ) : (
+              eventosAgenda.map((ev) => {
+                const esDelDiaSeleccionado = ev.dia === diaSeleccionado;
                 const esEspiritual = ev.tipo === 'espiritual';
+
                 return (
                   <div key={ev.id} style={{
-                    background: esEspiritual ? '#f0fdf4' : '#eff6ff',
-                    borderLeft: `4px solid ${esEspiritual ? '#22c55e' : '#3b82f6'}`,
+                    background: esDelDiaSeleccionado ? (esEspiritual ? '#f0fdf4' : '#eff6ff') : '#ffffff',
+                    borderLeft: esDelDiaSeleccionado ? `4px solid ${esEspiritual ? '#22c55e' : '#3b82f6'}` : '4px solid #cbd5e1',
                     padding: '14px 14px',
                     borderRadius: '14px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-                    border: `1px solid ${esEspiritual ? '#dcfce7' : '#dbeafe'}`,
+                    border: `1px solid ${esDelDiaSeleccionado ? (esEspiritual ? '#dcfce7' : '#dbeafe') : '#e2e8f0'}`,
                     minHeight: '90px',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    opacity: esDelDiaSeleccionado ? 1 : 0.75
                   }}>
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                         <span style={{
                           fontSize: '10px',
-                          background: esEspiritual ? '#dcfce7' : '#dbeafe',
-                          color: esEspiritual ? '#15803d' : '#1d4ed8',
+                          background: esDelDiaSeleccionado ? (esEspiritual ? '#dcfce7' : '#dbeafe') : '#f1f5f9',
+                          color: esDelDiaSeleccionado ? (esEspiritual ? '#15803d' : '#1d4ed8') : '#64748b',
                           padding: '2px 8px',
                           borderRadius: '6px',
                           fontWeight: '600'
                         }}>
                           {esEspiritual ? 'Espiritual' : 'Hogar'}
                         </span>
-                        <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: '600' }}>{ev.dia}</span>
+                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#374151' : '#94a3b8', fontWeight: 'bold' }}>{ev.dia}</span>
                       </div>
-                      <strong style={{ display: 'block', fontSize: '14px', color: '#1f2937', marginBottom: '4px', lineHeight: '1.2' }}>{ev.titulo}</strong>
+                      <strong style={{ display: 'block', fontSize: '14px', color: esDelDiaSeleccionado ? '#1f2937' : '#475569', marginBottom: '4px', lineHeight: '1.2' }}>{ev.titulo}</strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
                       <span style={{ fontSize: '12px', color: '#6b7280' }}>🕒 {ev.hora}</span>
@@ -747,8 +736,8 @@ function App() {
                     </div>
                   </div>
                 );
-              });
-            })()}
+              })
+            )}
           </div>
         </div>
       )}
@@ -875,7 +864,7 @@ function App() {
                 </select>
                 <input type="text" placeholder="Hora (Ej: 7:00 PM)" value={nuevaHora} onChange={(e) => setNuevaHora(e.target.value)} className="input-custom" />
               </div>
-              <select value={nuevoTipo} onChange={(e) => setNuevoTipo(e.target.value)} className="select-custom">
+              <select value={nuevoType} onChange={(e) => setNuevoTipo(e.target.value)} className="select-custom">
                 <option value="espiritual">🟢 Espiritual</option>
                 <option value="hogar">🔵 Hogar / Seglar</option>
               </select>
