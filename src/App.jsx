@@ -608,48 +608,49 @@ function App() {
           )}
 
           {esAdministrador ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '12px' }}>
               {listaHijos.length === 0 ? (
                 <p className="duties-empty">Aún no hay hijos registrados en este hogar.</p>
               ) : (
                 listaHijos.map(hijo => {
                   const tareasHijo = tareasDeberes.filter(t => t.para === hijo || t.para === 'todos');
                   return (
-                    <div key={hijo} style={{ background: '#f8f9fc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div key={hijo} style={{ background: '#f8f9fc', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#423267' }}>Deberes asignados</span>
-                        <span style={{ fontSize: '12px', background: '#ede8ff', color: '#7e69f8', padding: '3px 10px', borderRadius: '999px', fontWeight: '800' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#423267' }}>Deberes de</span>
+                        <span style={{ fontSize: '12px', background: '#ede8ff', color: '#7e69f8', padding: '4px 12px', borderRadius: '999px', fontWeight: '800' }}>
                           🧒 {hijo}
                         </span>
                       </div>
                       
                       {tareasHijo.length === 0 ? (
-                        <p style={{ fontSize: '12px', color: '#736298', fontStyle: 'italic' }}>Sin deberes asignados para este hijo</p>
+                        <p style={{ fontSize: '12px', color: '#736298', fontStyle: 'italic', padding: '6px 0' }}>Sin deberes asignados para este hijo</p>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                           {tareasHijo.map(tarea => (
-                            <div key={tarea.id} className="task-item-card" style={{ padding: '12px 14px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px', background: '#fff', border: '1px solid #e2e8f0' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                                <span className="task-text" style={{ fontSize: '14px', fontWeight: '700', flex: 1, color: '#3f315e' }}>{tarea.texto}</span>
-                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: '0' }}>
+                            <div key={tarea.id} className="task-item-card" style={{ padding: '14px 16px', borderRadius: '14px', display: 'flex', flexDirection: 'column', gap: '10px', background: '#fff', border: '1px solid #e2e8f0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                                <span className="task-text" style={{ fontSize: '14px', fontWeight: '700', flex: 1, color: '#3f315e', lineHeight: '1.4' }}>{tarea.texto}</span>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: '0' }}>
                                   <span className={`task-badge ${tarea.estado}`} style={{ fontSize: '11px', fontWeight: 'bold' }}>
                                     {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
                                   </span>
-                                  <span style={{ fontSize: '10px', color: '#736298', background: '#f1f5f9', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }}>
+                                  <span style={{ fontSize: '10px', color: '#736298', background: '#f1f5f9', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
                                     {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
                                   </span>
                                 </div>
                               </div>
 
                               {tarea.evidencia_url && (
-                                <div>
-                                  <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
-                                    📷 Ver foto de evidencia subida
+                                <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                  <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
+                                    📷 Ver foto de evidencia enviada
                                   </a>
+                                  <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                                 </div>
                               )}
 
-                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', alignItems: 'center', marginTop: '4px' }}>
                                 <button 
                                   type="button"
                                   className={`task-toggle-btn ${tarea.estado}`}
@@ -674,7 +675,7 @@ function App() {
               )}
             </div>
           ) : (
-            <div className="tasks-grid-container" style={{ marginTop: '8px' }}>
+            <div className="tasks-grid-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
               {tareasVisibles.length === 0 ? (
                 <p className="duties-empty">Aún no tienes deberes. Agrégalos o pídele a tus papás que te asignen 🌱</p>
               ) : (
@@ -683,33 +684,34 @@ function App() {
                   const puedeBorrar = esAdministrador || esSuTareaCreada;
 
                   return (
-                    <div key={tarea.id} className="task-item-card" style={{ padding: '14px', borderRadius: '14px', display: 'flex', flexDirection: 'column', gap: '10px', background: '#fbf9ff', border: '1px solid #ebdffc' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                        <span className="task-text" style={{ fontSize: '14px', fontWeight: '700', flex: 1, color: '#3f315e' }}>{tarea.texto}</span>
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                    <div key={tarea.id} className="task-item-card" style={{ padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', background: '#fbf9ff', border: '1px solid #ebdffc' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                        <span className="task-text" style={{ fontSize: '14px', fontWeight: '700', flex: 1, color: '#3f315e', lineHeight: '1.4' }}>{tarea.texto}</span>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
                           <span className={`task-badge ${tarea.estado}`} style={{ fontSize: '11px', fontWeight: 'bold' }}>
                             {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
                           </span>
-                          <span style={{ fontSize: '10px', color: '#736298', background: '#ede8ff', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }}>
+                          <span style={{ fontSize: '10px', color: '#736298', background: '#ede8ff', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
                             {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
                           </span>
                         </div>
                       </div>
 
                       {tarea.evidencia_url && (
-                        <div>
-                          <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
-                            📷 Ver foto de evidencia subida
+                        <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
+                            📷 Ver foto de evidencia enviada
                           </a>
+                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                         </div>
                       )}
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                           <button 
                             type="button"
                             className={`task-toggle-btn ${tarea.estado}`}
-                            style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
+                            style={{ fontSize: '11px', padding: '7px 12px', borderRadius: '8px' }}
                             onClick={async () => {
                               const nuevoEstado = tarea.estado === 'realizado' ? 'pendiente' : 'realizado';
                               setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t));
@@ -719,8 +721,8 @@ function App() {
                             {tarea.estado === 'realizado' ? 'Marcar Pendiente' : 'Marcar Hecho'}
                           </button>
 
-                          {/* Opción 1: Tomar foto con la cámara */}
-                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ede8ff', color: '#7e69f8', padding: '6px 10px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {/* Tomar foto con cámara */}
+                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ede8ff', color: '#7e69f8', padding: '7px 12px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                             📷 Tomar foto
                             <input 
                               type="file" 
@@ -735,15 +737,15 @@ function App() {
                                   const urlBase64 = uploadEv.target.result;
                                   await supabase.from('tareas').update({ evidencia_url: urlBase64 }).eq('id', tarea.id);
                                   setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlBase64 } : t));
-                                  alert('¡Foto tomada y guardada con éxito!');
+                                  alert('¡Foto de evidencia enviada con éxito a tus papás!');
                                 };
                                 lector.readAsDataURL(archivo);
                               }}
                             />
                           </label>
 
-                          {/* Opción 2: Buscar en la galería */}
-                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#f1f5f9', color: '#475569', padding: '6px 10px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {/* Buscar en galería */}
+                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#f1f5f9', color: '#475569', padding: '7px 12px', borderRadius: '8px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                             🖼️ Galería
                             <input 
                               type="file" 
@@ -757,7 +759,7 @@ function App() {
                                   const urlBase64 = uploadEv.target.result;
                                   await supabase.from('tareas').update({ evidencia_url: urlBase64 }).eq('id', tarea.id);
                                   setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlBase64 } : t));
-                                  alert('¡Imagen de galería cargada con éxito!');
+                                  alert('¡Imagen de galería enviada con éxito a tus papás!');
                                 };
                                 lector.readAsDataURL(archivo);
                               }}
@@ -776,13 +778,13 @@ function App() {
             </div>
           )}
 
-          <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '14px' }}>
+          <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '16px' }}>
             <input
               type="text"
               className="input-custom"
               placeholder={esAdministrador ? "Escribe la tarea para tus hijos..." : "Nuevo deber (Ej: Ordenar mi cuarto)"}
               value={nuevaTarea}
-              onChange={(e) => setNuevaTag ? setNuevaTarea(e.target.value) : setNuevaTarea(e.target.value)}
+              onChange={(e) => setNuevaTarea(e.target.value)}
             />
             <button type="submit" className="btn-add-event">+ Agregar</button>
             {esAdministrador && (
