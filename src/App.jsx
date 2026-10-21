@@ -856,11 +856,20 @@ function App() {
       )}
 
       {currentView === 'calendar' && (
-        <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box' }}>
-          <div className="panel-title-row">
+        <div className="spiritual-panel" style={{ width: '100%', boxSizing: 'border-box', background: '#fdfcfe' }}>
+          <div className="panel-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             <h3>📅 Agenda Familiar</h3>
             {esAdministrador && (
-              <button className="btn-add-event" onClick={() => setIsEventModalOpen(true)}>+ Nuevo Evento</button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button className="btn-add-event" onClick={() => setIsEventModalOpen(true)}>+ Nuevo Evento</button>
+                <button 
+                  className="btn-add-event" 
+                  style={{ backgroundColor: '#d97706', color: '#ffffff' }} 
+                  onClick={() => alert('🌟 Sección para agendar actividades lejanas y proyectos futuros.')}
+                >
+                  📅 Actividades Lejanas
+                </button>
+              </div>
             )}
           </div>
 
@@ -920,22 +929,28 @@ function App() {
                 const esEspiritual = ev.tipo === 'espiritual';
 
                 return (
-                  <div key={ev.id} style={{
+                  <div key={ev.id} className="agenda-post-it" style={{
                     background: esDelDiaSeleccionado ? (esEspiritual ? '#d1fae5' : '#ffe4e6') : '#ffffff',
-                    borderLeft: esDelDiaSeleccionado ? `4px solid ${esEspiritual ? '#059669' : '#e11d48'}` : '4px solid #94a3b8',
-                    padding: '14px 14px',
-                    borderRadius: '16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                     border: `1.5px solid ${esDelDiaSeleccionado ? (esEspiritual ? '#34d399' : '#fb7185') : '#cbd5e1'}`,
-                    minHeight: '100px',
-                    boxSizing: 'border-box',
                     opacity: esDelDiaSeleccionado ? 1 : 0.85
                   }}>
+                    {/* Franja superior oscura típica de nota adhesiva */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '6px',
+                      background: esEspiritual ? '#059669' : '#e11d48'
+                    }} />
+
+                    {/* Tachuela / Pin decorativo */}
+                    <div style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '14px', opacity: 0.85 }}>
+                      📌
+                    </div>
+
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', marginTop: '4px' }}>
                         <span style={{
                           fontSize: '10px',
                           background: esDelDiaSeleccionado ? (esEspiritual ? '#a7f3d0' : '#fecdd3') : '#f1f5f9',
@@ -944,9 +959,9 @@ function App() {
                           borderRadius: '8px',
                           fontWeight: '800'
                         }}>
-                          {esEspiritual ? '🌿 Espiritual' : '🏠 Hogar'}
+                          {esEspiritual ? 'Espiritual' : 'Hogar'}
                         </span>
-                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#1f2937' : '#64748b', fontWeight: '800' }}>{ev.dia}</span>
+                        <span style={{ fontSize: '11px', color: esDelDiaSeleccionado ? '#1f2937' : '#64748b', fontWeight: '800', marginRight: '16px' }}>{ev.dia}</span>
                       </div>
                       <strong style={{ display: 'block', fontSize: '14px', color: '#1f2937', marginBottom: '4px', lineHeight: '1.3' }}>{ev.titulo}</strong>
                     </div>
@@ -1085,8 +1100,8 @@ function App() {
                 <input type="text" placeholder="Hora (Ej: 7:00 PM)" value={nuevaHora} onChange={(e) => setNuevaHora(e.target.value)} className="input-custom" />
               </div>
               <select value={nuevoTipo} onChange={(e) => setNuevoTipo(e.target.value)} className="select-custom">
-                <option value="espiritual">🟢 Espiritual</option>
-                <option value="hogar">🔵 Hogar / Seglar</option>
+                <option value="espiritual">Espiritual</option>
+                <option value="hogar">Hogar / Seglar</option>
               </select>
               <div className="modal-buttons">
                 <button type="button" className="btn-cancelar" onClick={() => setIsEventModalOpen(false)}>Cancelar</button>

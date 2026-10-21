@@ -32,7 +32,7 @@ button {
 }
 
 .app-container {
-  max-width: 500px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   padding: 10px 14px 18px;
@@ -162,12 +162,11 @@ button {
   text-align: left;
 }
 
-/* Reducción del espacio vertical entre líneas de listas */
 .duties-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 2px; /* Espacio reducido entre un elemento y otro */
+  gap: 2px;
   max-height: 130px;
   overflow-y: auto;
   text-align: left;
@@ -181,7 +180,7 @@ button {
   font-size: 12.5px;
   font-weight: 700;
   color: #3f315e;
-  padding: 1px 0; /* Padding vertical mínimo para que sea compacto */
+  padding: 1px 0;
   line-height: 1.25;
 }
 
@@ -262,7 +261,6 @@ button {
   transition: width 0.4s ease;
 }
 
-/* Nota de agenda del día */
 .board-note {
   display: flex;
   flex-direction: column;
@@ -277,7 +275,6 @@ button {
   text-align: left;
 }
 
-/* ============ CUADRO DE PENSAMIENTO ============ */
 .inspiration-board-pastel {
   background: linear-gradient(135deg, #f3f0ff 0%, #fcf4dd 100%);
   border: 1px solid #ebdffc;
@@ -305,7 +302,6 @@ button {
   font-weight: 700;
 }
 
-/* ============ BOTONES DE NAVEGACIÓN ============ */
 .grid-buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -336,7 +332,6 @@ button {
   text-align: left;
 }
 
-/* ============ RESTO DE VISTAS ============ */
 .tasks-board-section, .spiritual-panel {
   background-color: var(--blanco);
   border-radius: 20px;
@@ -391,30 +386,6 @@ button {
   border-radius: 14px;
   border: 1px solid var(--borde);
   background-color: #fbf9ff;
-}
-
-.task-item-card.realizado {
-  background-color: #ecfdf5;
-  border-color: #a7f3d0;
-}
-
-.task-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  text-align: left;
-}
-
-.task-text {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--texto);
-}
-
-.task-item-card.realizado .task-text {
-  color: var(--texto-suave);
-  
 }
 
 .task-badge {
@@ -479,18 +450,11 @@ button {
 
 .task-options .select-custom { flex: 1; }
 
-.task-origin {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--primario);
-}
-
 .add-task-form .input-custom {
   flex: 1;
   min-width: 0;
 }
 
-/* Pestañas y componentes secundarios */
 .tabs-container {
   display: flex;
   background-color: var(--primario-suave);
@@ -623,39 +587,6 @@ button {
   text-align: left;
 }
 
-.agenda-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 360px;
-  overflow-y: auto;
-}
-
-.agenda-card {
-  background-color: #fbf9ff;
-  border-left: 4px solid #cbd5e1;
-  padding: 12px 14px;
-  border-radius: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--borde);
-  border-left-width: 4px;
-}
-
-.agenda-card.espiritual { border-left-color: var(--exito); }
-.agenda-card.hogar { border-left-color: #60a5fa; }
-
-.agenda-info { display: flex; flex-direction: column; gap: 2px; text-align: left; }
-.agenda-title { font-size: 13px; font-weight: 800; color: var(--texto); }
-.agenda-time { font-size: 11px; color: var(--texto-suave); font-weight: 600; }
-.agenda-side { display: flex; align-items: center; gap: 4px; }
-
-.badge-type { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
-.badge-type.espiritual { background-color: var(--exito-suave); color: #047857; }
-.badge-type.hogar { background-color: #eff6ff; color: #1d4ed8; }
-
 .btn-add-event {
   background-color: var(--primario);
   color: #ffffff;
@@ -722,7 +653,6 @@ button {
 .btn-cancelar { flex: 1; background-color: var(--primario-suave); border: none; padding: 12px; border-radius: 12px; font-weight: 700; color: var(--texto-suave); }
 .btn-confirmar { flex: 1; background-color: var(--primario); border: none; padding: 12px; border-radius: 12px; font-weight: 700; color: #ffffff; }
 
-/* ============ ROL JUNTO AL NOMBRE ============ */
 .rol-chip {
   margin-left: 6px;
   font-size: 10px;
@@ -737,4 +667,23 @@ button {
 .rol-chip.admin {
   background: #fef3c7;
   color: #b45309;
+}
+
+/* ============ TARJETAS TIPO POST-IT / AGENDA ============ */
+.agenda-post-it {
+  padding: 16px 14px 14px 14px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  min-height: 110px;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease;
+}
+
+.agenda-post-it:active {
+  transform: scale(0.98);
 }
