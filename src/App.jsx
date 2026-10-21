@@ -608,22 +608,69 @@ function App() {
           )}
 
           <div className="tasks-grid-container">
-            {tareasDeberes.map(tarea => (
-              <div key={tarea.id} className={`task-item-card ${tarea.estado}`}>
-                <div className="task-info">
-                  <span className="task-text">{tarea.texto}</span>
-                  <span className="task-origin">
-                    {tarea.origen === 'padres' ? `👨‍👩‍👧 Asignado a: ${tarea.para}` : `🧒 Creado por ${tarea.origen}`}
-                  </span>
-                  <span className={`task-badge ${tarea.estado}`}>
-                    {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
-                  </span>
+            {tareasDeberes.map(tarea => {
+              const esSuTareaCreada = tarea.origen !== 'padres';
+              const puedeBorrar = esAdministrador || esSuTareaCreada;
+
+              return (
+                <div key={tarea.id} className={`task-item-card ${tarea.estado}`}>
+                  <div className="task-info">
+                    <span className="task-text">{tarea.texto}</span>
+                    <span className="task-origin">
+                      {tarea.origen === 'padres' ? '👨‍👩‍👧 Asignada por papá o mamá' : '🧒 Creada por ti'}
+                    </span>
+                    {tarea.evidencia_url && (
+                      <a href={tarea.evidencia_url} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#7e69f8', fontWeight: 'bold', textDecoration: 'underline' }}>
+                        📷 Ver foto de evidencia subida
+                      </a>
+                    )}
+                    <span className={`task-badge ${tarea.estado}`}>
+                      {tarea.estado === 'pendiente' ? '⏳ Pendiente' : '✅ Hecho'}
+                    </span>
+                  </div>
+
+                  <div className="task-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button 
+                      type="button"
+                      className={`task-toggle-btn ${tarea.estado}`}
+                      onClick={async () => {
+                        const nuevoEstado = tarea.estado === 'realizado' ? 'pendiente' : 'realizado';
+                        setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t));
+                        await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
+                      }}
+                    >
+                      {tarea.estado === 'realizado' ? 'Marcar Pendiente' : 'Marcar Hecho'}
+                    </button>
+
+                    {/* Subir foto de evidencia */}
+                    <label style={{ cursor: 'pointer', fontSize: '16px', background: '#ede8ff', padding: '6px', borderRadius: '8px' }} title="Subir foto de evidencia">
+                      📷
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={async (e) => {
+                          const archivo = e.target.files[0];
+                          if (!archivo) return;
+                          const lector = new FileReader();
+                          lector.onload = async (uploadEv) => {
+                            const urlBase64 = uploadEv.target.result;
+                            await supabase.from('tareas').update({ evidencia_url: urlBase64 }).eq('id', tarea.id);
+                            setTareasDeberes(prev => prev.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlBase64 } : t));
+                            alert('¡Foto de evidencia guardada con éxito!');
+                          };
+                          lector.readAsDataURL(archivo);
+                        }}
+                      />
+                    </label>
+
+                    {puedeBorrar && (
+                      <button type="button" className="task-delete-btn" onClick={() => eliminarTarea(tarea.id)} aria-label="Eliminar deber">✕</button>
+                    )}
+                  </div>
                 </div>
-                <div className="task-actions">
-                  <button className="task-delete-btn" onClick={() => eliminarTarea(tarea.id)} aria-label="Eliminar deber">✕</button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <form className="add-task-form" onSubmit={agregarTarea}>

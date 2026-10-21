@@ -414,7 +414,7 @@ button {
 
 .task-item-card.realizado .task-text {
   color: var(--texto-suave);
-  text-decoration: line-through;
+  
 }
 
 .task-badge {
