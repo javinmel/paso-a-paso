@@ -1,8 +1,16 @@
 import React from 'react';
+import './Configuracion.css';
+import { esRolAdmin, etiquetaRol, nombreBonito, ordenarMiembros } from '../utils/roles';
 import { supabase } from '../supabaseClient';
 
-function Configuracion({ familia, miembrosHogars = [], onCambiarHogar, onCerrarSesion, onVolver }) {
-  const miembros = miembrosHogars || [];
+function Configuracion({ familia, miembros = [], miembrosHogars = [], usuarioActual, nombre, onCambiarHogar, onCerrarSesion, onVolver }) {
+  const listaMiembros = miembros.length > 0 ? miembros : miembrosHogars;
+  const usuarioActivo = usuarioActual || nombre;
+  const lista = ordenarMiembros(listaMiembros || []);
+
+  // Verificar si el usuario actual es administrador
+  const miembroActual = listaMiembros.find(m => m.nombre === usuarioActivo);
+  const esAdminActual = esRolAdmin(miembroActual?.rol) || usuarioActivo === familia?.administrador || ['Papá', 'Mamá'].includes(usuarioActivo);
 
   const borrarMiembro = async (nombreMiembro) => {
     if (!window.confirm(`¿Estás seguro de eliminar a ${nombreMiembro} del hogar?`)) return;
@@ -38,100 +46,82 @@ function Configuracion({ familia, miembrosHogars = [], onCambiarHogar, onCerrarS
   };
 
   return (
-    <div className="spiritual-panel" style={{ width: '100%', maxWidth: '650px', margin: '0 auto', boxSizing: 'border-box' }}>
-      <div className="panel-title-row">
-        <h3>⚙️ Configuración</h3>
-        <button className="icon-btn" onClick={onVolver}>⬅️</button>
+    <div className="config-panel" style={{ width: '100%', maxWidth: '650px', margin: '0 auto', boxSizing: 'border-box' }}>
+      <div className="config-hogar" style={{ width: '100%', boxSizing: 'border-box' }}>
+        <span className="config-hogar-label">Tu hogar</span>
+        <h2>{nombreBonito(familia?.nombreFamilia)}</h2>
+        <p>Comparte este nombre para que otros se unan</p>
       </div>
 
-      <div className="tab-content" style={{ textAlign: 'left', width: '100%', boxSizing: 'border-box' }}>
-        {/* Cuadro principal más ancho */}
-        <div style={{
-          background: '#2b2d42',
-          color: '#fff',
-          padding: '22px',
-          borderRadius: '16px',
-          marginBottom: '20px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
-          <span style={{ fontSize: '11px', color: '#a0aec0', textTransform: 'uppercase', letterSpacing: '1px' }}>Tu hogar</span>
-          <h2 style={{ fontSize: '26px', margin: '4px 0 0 0', fontWeight: 'bold' }}>{familia?.nombreFamilia}</h2>
-          {/* Textos inferiores retirados por completo */}
-        </div>
+      <section className="config-seccion" style={{ width: '100%', boxSizing: 'border-box' }}>
+        <h4 className="config-titulo">Miembros del hogar ({lista.length})</h4>
 
-        <div style={{ marginBottom: '24px', width: '100%', boxSizing: 'border-box' }}>
-          <h4 style={{ fontSize: '15px', color: '#423267', marginBottom: '10px' }}>
-            Miembros del hogar ({miembros.length})
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
-            {miembros.map((m) => {
-              const rolStr = m.rol || 'Miembro';
-              const esAdmin = m.nombre === familia?.administrador || ['Papá', 'Mamá', 'admin', 'admin_secundario'].includes(rolStr);
+        {lista.length === 0 ? (
+          <p className="config-vacio">Aún no hay miembros en este hogar.</p>
+        ) : (
+          <ul className="config-miembros" style={{ width: '100%', boxSizing: 'border-box' }}>
+            {lista.map((m) => {
+              const admin = esRolAdmin(m.rol);
               return (
-                <div key={m.id || m.nombre} style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px', 
-                  background: '#f8f9fc', 
-                  padding: '14px 16px', 
-                  borderRadius: '12px', 
-                  border: '1px solid #e2e8f0',
-                  width: '100%',
-                  boxSizing: 'border-box'
-                }}>
-                  <span style={{
-                    background: esAdmin ? '#7e69f8' : '#cbd5e1',
-                    color: esAdmin ? '#fff' : '#1e293b',
-                    width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 'bold', fontSize: '15px', flexShrink: 0
-                  }}>
-                    {m.nombre ? m.nombre[0].toUpperCase() : 'U'}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong style={{ display: 'block', fontSize: '14px', color: '#1e293b' }}>{m.nombre}</strong>
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>
-                      Rol: {rolStr}
-                    </span>
+                <li key={m.id || m.nombre} className={`config-miembro ${admin ? 'admin' : ''}`} style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    <span className="config-avatar">{(m.nombre || 'U')[0].toUpperCase()}</span>
+                    <div className="config-miembro-info">
+                      <strong>
+                        {m.nombre}
+                        {m.nombre === usuarioActivo && <em> (tú)</em>}
+                      </strong>
+                      <small>{etiquetaRol(m.rol)}</small>
+                    </div>
                   </div>
-                  <span style={{ fontSize: '11px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '6px', color: '#475569', flexShrink: 0 }}>
-                    {esAdmin ? '👑 Admin' : '🧒 Miembro'}
-                  </span>
-                  <button 
-                    type="button" 
-                    onClick={() => borrarMiembro(m.nombre)}
-                    style={{
-                      background: '#fee2e2',
-                      color: '#dc2626',
-                      border: 'none',
-                      padding: '6px 10px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      flexShrink: '0'
-                    }}
-                  >
-                    🗑️ Borrar
-                  </button>
-                </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {admin && <span className="config-badge admin">👑 Administrador</span>}
+                    {esAdminActual && (
+                      <button 
+                        type="button" 
+                        onClick={() => borrarMiembro(m.nombre)}
+                        style={{
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          border: 'none',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        🗑️ Borrar
+                      </button>
+                    )}
+                  </div>
+                </li>
               );
             })}
-          </div>
-        </div>
+          </ul>
+        )}
+      </section>
 
-        {/* Botones de acción sin textos adicionales debajo */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px', width: '100%', boxSizing: 'border-box' }}>
-          <button type="button" className="btn-action-main" onClick={onCambiarHogar} style={{ backgroundColor: '#2563eb', color: '#fff', width: '100%', padding: '14px', boxSizing: 'border-box' }}>
-            🔄 Cambiar de hogar
-          </button>
-          <button type="button" className="btn-action-main" onClick={onCerrarSesion} style={{ backgroundColor: '#475569', color: '#fff', width: '100%', padding: '14px', boxSizing: 'border-box' }}>
-            🚪 Cerrar sesión
-          </button>
-          <button type="button" className="btn-action-main" onClick={borrarHogar} style={{ backgroundColor: '#dc2626', color: '#fff', width: '100%', padding: '14px', boxSizing: 'border-box' }}>
+      <div className="config-acciones" style={{ width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <button type="button" className="config-btn cambiar" onClick={onCambiarHogar} style={{ width: '100%', boxSizing: 'border-box' }}>
+          🔄 Cambiar de hogar
+        </button>
+
+        <button type="button" className="config-btn salir" onClick={onCerrarSesion} style={{ width: '100%', boxSizing: 'border-box' }}>
+          🚪 Cerrar sesión
+        </button>
+
+        {esAdminActual && (
+          <button 
+            type="button" 
+            className="config-btn" 
+            onClick={borrarHogar} 
+            style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
             ⚠️ Borrar Hogar por Completo
           </button>
-        </div>
+        )}
       </div>
     </div>
   );
