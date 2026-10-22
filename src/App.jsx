@@ -216,8 +216,9 @@ function App() {
   const [nuevaTarea, setNuevaTarea] = useState('');
   const [nuevoPara, setNuevoPara] = useState('todos');
   const [tipoAsignacion, setTipoAsignacion] = useState('normal'); // 'normal', 'recurrente_normal', 'recurrente_rotativo'
-  const [frecuenciaRotacion, setFrecuenciaRotacion] = useState('diaria'); // 'diaria', 'semanal'
+  const [frecuenciaRecurrente, setFrecuenciaRecurrente] = useState('diario'); // 'diario', 'semanal'
   const [hijoInicioRotacion, setHijoInicioRotacion] = useState('');
+  const [momentoDia, setMomentoDia] = useState('Mañana'); // 'Mañana', 'Tarde', 'Noche'
 
   const [nuevoTitulo, setNuevoTitulo] = useState('');
   const [nuevoDia, setNuevoDia] = useState('Lunes');
@@ -404,15 +405,17 @@ function App() {
     let etiquetaExtra = '';
 
     if (tipoAsignacion === 'recurrente_normal') {
-      etiquetaExtra = ' [Recurrente]';
+      etiquetaExtra = ` [Recurrente: ${frecuenciaRecurrente}]`;
     } else if (tipoAsignacion === 'recurrente_rotativo') {
       const hijoAsignado = hijoInicioRotacion || (listaHijosArr.length > 0 ? listaHijosArr[0] : 'General');
       destinoPara = hijoAsignado;
-      etiquetaExtra = ` [Turnos: ${frecuenciaRotacion}]`;
+      etiquetaExtra = ` [Turnos: ${frecuenciaRecurrente}]`;
     }
 
+    const textoFinal = `${nuevaTarea.trim()}${etiquetaExtra} | Momento: ${momentoDia}`;
+
     const nuevaObj = {
-      texto: (nuevaTarea.trim() + etiquetaExtra),
+      texto: textoFinal,
       estado: 'pendiente',
       origen,
       para: esAdministrador ? destinoPara : nombre,
@@ -510,7 +513,7 @@ function App() {
     <div className="app-container">
       {(!familia || !nombre) && <Onboarding familiaInicial={familia} onFamiliaCreada={manejarFamiliaCreada} />}
 
-      <header className="app-header">
+      <header className="app-header" style={{ position: 'sticky', top: 0, zIndex: 1000, background: '#f8fafc', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
         <div className="header-left">
           {currentView !== 'home' ? (
             <button className="icon-btn" onClick={() => setCurrentView('home')}>⬅️ Volver</button>
@@ -573,14 +576,22 @@ function App() {
                             <p style={{ fontSize: '12px', color: '#736298' }}>Sin deberes asignados</p>
                           ) : (
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {tareasHijo.map(t => (
-                                <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', background: '#fff', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                                  <span>{t.texto}</span>
-                                  <span style={{ color: t.estado === 'realizado' ? '#16a34a' : '#d97706', fontWeight: 'bold' }}>
-                                    {t.estado === 'realizado' ? '✅ Hecho' : '⏳ Pendiente'}
-                                  </span>
-                                </li>
-                              ))}
+                              {tareasHijo.map(t => {
+                                const partesTexto = t.texto.split('| Momento:');
+                                const tituloReal = partesTexto[0].trim();
+                                const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+                                return (
+                                  <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', background: '#fff', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                      <span>{tituloReal}</span>
+                                      {momentoReal && <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: 'bold' }}>🕒 {momentoReal}</span>}
+                                    </div>
+                                    <span style={{ color: t.estado === 'realizado' ? '#16a34a' : '#d97706', fontWeight: 'bold' }}>
+                                      {t.estado === 'realizado' ? '✅ Hecho' : '⏳ Pendiente'}
+                                    </span>
+                                  </li>
+                                );
+                              })}
                             </ul>
                           )}
                         </div>
@@ -617,13 +628,25 @@ function App() {
                     <p className="duties-empty">Aún no tienes deberes. Agrégalos en el botón Deberes 🌱</p>
                   ) : (
                     <ul className="duties-list">
-                      {tareasOrdenadas.map(t => (
-                        <li key={t.id} className={`duty-row ${t.estado}`}>
-                          <span className="duty-mark">{t.estado === 'realizado' ? '✓' : ''}</span>
-                          <span className="duty-text">{t.origen === 'padres' ? '👨‍👩‍👧 ' : ''}{t.texto}</span>
-                          <span className={`duty-pill ${t.estado}`}>{t.estado === 'realizado' ? 'Realizado' : 'Pendiente'}</span>
-                        </li>
-                      ))}
+                      {tareasOrdenadas.map(t => {
+                        const partesTexto = t.texto.split('| Momento:');
+                        const tituloReal = partesTexto[0].trim();
+                        const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+                        return (
+                          <li key={t.id} className={`duty-row ${t.estado}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px', padding: '4px 0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px' }}>
+                              <span className="duty-mark">{t.estado === 'realizado' ? '✓' : ''}</span>
+                              <span className="duty-text">{t.origen === 'padres' ? '👨‍👩‍👧 ' : ''}{tituloReal}</span>
+                              <span className={`duty-pill ${t.estado}`}>{t.estado === 'realizado' ? 'Realizado' : 'Pendiente'}</span>
+                            </div>
+                            {momentoReal && (
+                              <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', marginLeft: '20px' }}>
+                                🕒 {momentoReal}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </div>
@@ -686,7 +709,6 @@ function App() {
           gap: '16px'
         }}>
           
-          {/* Franela superior con título alineado a la izquierda */}
           <div style={{
             background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
             width: '100%',
@@ -737,6 +759,10 @@ function App() {
                             {tareasHijo.map((tarea, idx) => {
                               const esRealizado = tarea.estado === 'realizado';
                               const esSuTareaCreada = tarea.origen !== 'padres';
+                              const partesTexto = tarea.texto.split('| Momento:');
+                              const tituloReal = partesTexto[0].trim();
+                              const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+
                               const paleta10Vivos = [
                                 { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
                                 { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
@@ -780,11 +806,16 @@ function App() {
                                   )}
 
                                   <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
-                                    {tarea.texto}
+                                    {tituloReal}
                                   </span>
 
-                                  {/* Insignia ovalada */}
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  {momentoReal && (
+                                    <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
+                                      🕒 {momentoReal}
+                                    </span>
+                                  )}
+
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                     <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
                                       {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
                                     </span>
@@ -853,6 +884,10 @@ function App() {
                     const esRealizado = tarea.estado === 'realizado';
                     const esSuTareaCreada = tarea.origen !== 'padres';
                     const puedeBorrar = esAdministrador || esSuTareaCreada;
+                    const partesTexto = tarea.texto.split('| Momento:');
+                    const tituloReal = partesTexto[0].trim();
+                    const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+
                     const paleta10Vivos = [
                       { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
                       { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
@@ -896,11 +931,16 @@ function App() {
                         )}
 
                         <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
-                          {tarea.texto}
+                          {tituloReal}
                         </span>
 
-                        {/* Insignia ovalada */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {momentoReal && (
+                          <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
+                            🕒 {momentoReal}
+                          </span>
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                           <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
                             {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
                           </span>
@@ -988,7 +1028,7 @@ function App() {
               </div>
             )}
 
-            {/* FORMULARIO DE ASIGNACIÓN CON OPCIONES RECURRENTES / TURNOS */}
+            {/* FORMULARIO DE ASIGNACIÓN CON OPCIONES AVANZADAS */}
             <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '16px', width: '100%', boxSizing: 'border-box' }}>
               <input
                 type="text"
@@ -1008,28 +1048,48 @@ function App() {
                     </select>
 
                     <select className="select-custom" value={tipoAsignacion} onChange={(e) => setTipoAsignacion(e.target.value)} style={{ flex: 1 }}>
-                      <option value="normal">Asignar Deber (Normal)</option>
-                      <option value="recurrente_normal">Tarea Recurrente (Fija)</option>
-                      <option value="recurrente_rotativo">Tarea por Turnos / Rotativa</option>
+                      <option value="normal">Deber / Tarea Normal</option>
+                      <option value="recurrente_normal">Recurrente (Fija)</option>
+                      <option value="recurrente_rotativo">Por Turnos / Rotativa</option>
                     </select>
                   </div>
 
-                  {tipoAsignacion === 'recurrente_rotativo' && (
+                  {(tipoAsignacion === 'recurrente_normal' || tipoAsignacion === 'recurrente_rotativo') && (
                     <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                      <select className="select-custom" value={frecuenciaRotacion} onChange={(e) => setFrecuenciaRotacion(e.target.value)} style={{ flex: 1 }}>
-                        <option value="diaria">Rotación Diaria</option>
-                        <option value="semanal">Rotación Semanal</option>
+                      <select className="select-custom" value={frecuenciaRecurrente} onChange={(e) => setFrecuenciaRecurrente(e.target.value)} style={{ flex: 1 }}>
+                        <option value="diario">Frecuencia: Diario</option>
+                        <option value="semanal">Frecuencia: Semanal</option>
                       </select>
-                      <select className="select-custom" value={hijoInicioRotacion} onChange={(e) => setHijoInicioRotacion(e.target.value)} style={{ flex: 1 }}>
-                        <option value="">¿Qué hijo empieza?</option>
-                        {listaHijosArr.map(h => <option key={h} value={h}>Empieza {h}</option>)}
-                      </select>
+                      {tipoAsignacion === 'recurrente_rotativo' && (
+                        <select className="select-custom" value={hijoInicioRotacion} onChange={(e) => setHijoInicioRotacion(e.target.value)} style={{ flex: 1 }}>
+                          <option value="">¿Qué hijo empieza?</option>
+                          {listaHijosArr.map(h => <option key={h} value={h}>Empieza {h}</option>)}
+                        </select>
+                      )}
                     </div>
                   )}
+
+                  <div style={{ display: 'flex', width: '100%' }}>
+                    <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
+                      <option value="Mañana">☀️ Momento: Mañana</option>
+                      <option value="Tarde">🌤️ Momento: Tarde</option>
+                      <option value="Noche">🌙 Momento: Noche</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
-              <button type="submit" className="btn-add-event" style={{ width: '100%', marginTop: '4px' }}>+ Asignar Deber / Tarea</button>
+              {!esAdministrador && (
+                <div style={{ display: 'flex', width: '100%', marginTop: '6px' }}>
+                  <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
+                    <option value="Mañana">☀️ Momento: Mañana</option>
+                    <option value="Tarde">🌤️ Momento: Tarde</option>
+                    <option value="Noche">🌙 Momento: Noche</option>
+                  </select>
+                </div>
+              )}
+
+              <button type="submit" className="btn-add-event" style={{ width: '100%', marginTop: '6px' }}>+ Asignar Deber / Tarea</button>
             </form>
           </div>
         </div>
