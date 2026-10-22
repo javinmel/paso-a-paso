@@ -250,6 +250,7 @@ function App() {
   const [nuevoPara, setNuevoPara] = useState('todos');
   const [tipoAsignacion, setTipoAsignacion] = useState('normal'); // 'normal', 'recurrente_normal', 'recurrente_rotativo'
   const [frecuenciaRecurrente, setFrecuenciaRecurrente] = useState('diario'); // 'diario', 'semanal'
+  const [diaSemanaRecurrente, setDiaSemanaRecurrente] = useState('Lunes'); // 'Lunes', 'Martes', etc.
   const [hijoInicioRotacion, setHijoInicioRotacion] = useState('');
   const [momentoDia, setMomentoDia] = useState('Mañana'); // 'Mañana', 'Tarde', 'Noche'
   const [requiereFoto, setRequiereFoto] = useState('con_foto'); // 'con_foto', 'sin_foto'
@@ -437,16 +438,20 @@ function App() {
     
     let destinoPara = nuevoPara;
     let tipoStr = 'Normal';
-    let frecuenciaStr = '';
+    let frecuenciaStr = frecuenciaRecurrente;
 
     if (tipoAsignacion === 'recurrente_normal') {
       tipoStr = 'Recurrente';
-      frecuenciaStr = frecuenciaRecurrente;
+      if (frecuenciaRecurrente === 'semanal') {
+        frecuenciaStr = `semanal (${diaSemanaRecurrente})`;
+      }
     } else if (tipoAsignacion === 'recurrente_rotativo') {
       const hijoAsignado = hijoInicioRotacion || (listaHijosArr.length > 0 ? listaHijosArr[0] : 'General');
       destinoPara = hijoAsignado;
       tipoStr = 'Por turnos';
-      frecuenciaStr = frecuenciaRecurrente;
+      if (frecuenciaRecurrente === 'semanal') {
+        frecuenciaStr = `semanal (${diaSemanaRecurrente})`;
+      }
     }
 
     const textoFinal = `${nuevaTarea.trim()} | Tipo: ${tipoStr} | Frecuencia: ${frecuenciaStr} | Momento: ${momentoDia} | Foto: ${requiereFoto}`;
@@ -595,7 +600,7 @@ function App() {
               </div>
 
               <div className="board-box">
-                <div className="board-title">👥 Estado de los Hijos</div>
+                <div className="board-title">Estado de los Hijos</div>
                 {listaHijosArr.length === 0 ? (
                   <p className="duties-empty">Aún no hay hijos conectados. Comparte el nombre del hogar ("{familia.nombreFamilia}") para que ingresen.</p>
                 ) : (
@@ -606,7 +611,7 @@ function App() {
                       return (
                         <div key={hijo} style={{ background: '#f8f9fc', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#423267', marginBottom: '6px' }}>
-                            <span>🧒 {hijo}</span>
+                            <span>{hijo}</span>
                             <span>{realizadasHijo.length} / {tareasHijo.length} completadas</span>
                           </div>
                           {tareasHijo.length === 0 ? (
@@ -662,7 +667,7 @@ function App() {
                 </div>
                 
                 <div className="board-box">
-                  <div className="board-title">📌 Mis deberes</div>
+                  <div className="board-title">Mis deberes</div>
                   {tareasOrdenadas.length === 0 ? (
                     <p className="duties-empty">Aún no tienes deberes. Agrégalos en el botón Deberes 🌱</p>
                   ) : (
@@ -674,7 +679,7 @@ function App() {
                             <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px', justifyContent: 'space-between' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <span className="duty-mark">{t.estado === 'realizado' ? '✓' : ''}</span>
-                                <span className="duty-text">{t.origen === 'padres' ? '👨‍👩‍👧 ' : ''}{tituloReal}</span>
+                                <span className="duty-text">{t.origen === 'padres' ? '' : ''}{tituloReal}</span>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {momentoReal && (
@@ -1124,11 +1129,18 @@ function App() {
                   </div>
 
                   {(tipoAsignacion === 'recurrente_normal' || tipoAsignacion === 'recurrente_rotativo') && (
-                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                    <div style={{ display: 'flex', gap: '8px', width: '100%', flexWrap: 'wrap' }}>
                       <select className="select-custom" value={frecuenciaRecurrente} onChange={(e) => setFrecuenciaRecurrente(e.target.value)} style={{ flex: 1 }}>
                         <option value="diario">Frecuencia: Diario</option>
                         <option value="semanal">Frecuencia: Semanal</option>
                       </select>
+                      {frecuenciaRecurrente === 'semanal' && (
+                        <select className="select-custom" value={diaSemanaRecurrente} onChange={(e) => setDiaSemanaRecurrente(e.target.value)} style={{ flex: 1 }}>
+                          {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => (
+                            <option key={d} value={d}>Día: {d}</option>
+                          ))}
+                        </select>
+                      )}
                       {tipoAsignacion === 'recurrente_rotativo' && (
                         <select className="select-custom" value={hijoInicioRotacion} onChange={(e) => setHijoInicioRotacion(e.target.value)} style={{ flex: 1 }}>
                           <option value="">¿Qué hijo empieza?</option>
