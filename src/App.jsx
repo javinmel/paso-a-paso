@@ -215,6 +215,7 @@ function App() {
 
   const [nuevaTarea, setNuevaTarea] = useState('');
   const [nuevoPara, setNuevoPara] = useState('todos');
+  const [nuevoTipoAsignacion, setNuevoTipoAsignacion] = useState('normal'); // 'normal', 'recurrente', 'turnos'
   const [nuevoTitulo, setNuevoTitulo] = useState('');
   const [nuevoDia, setNuevoDia] = useState('Lunes');
   const [nuevaHora, setNuevaHora] = useState('6:00 PM');
@@ -321,9 +322,12 @@ function App() {
   };
 
   const textoLeidoHoy = textoDiarioDias.includes(fechaHoy());
-  const tareasVisibles = tareasDeberes.filter(t => (t.para || 'todos') === 'todos' || t.para === nombre);
-  const totalTareas = tareasVisibles.length;
-  const tareasHechas = tareasVisibles.filter(t => t.estado === 'realizado').length;
+  const tareasVisibles = tareasDeberes.filter(t => (t.para || 'todos') === 'todos' || t.para === nombre || t.para === 'recurrentes');
+  const tareasNormales = tareasVisibles.filter(t => t.para !== 'recurrentes');
+  const tareasRecurrentes = tareasDeberes.filter(t => t.para === 'recurrentes');
+
+  const totalTareas = tareasNormales.length;
+  const tareasHechas = tareasNormales.filter(t => t.estado === 'realizado').length;
   const porcentaje = totalTareas ? Math.round((tareasHechas / totalTareas) * 100) : 0;
   const totalCapitulos = Object.keys(capitulosCompletados).length;
   const lecturaHoy = lecturaDias.includes(fechaHoy());
@@ -331,8 +335,8 @@ function App() {
   const minutosGanados = tareasHechas * MIN_POR_TAREA;
   
   const tareasOrdenadas = [
-    ...tareasVisibles.filter(t => t.estado === 'pendiente'),
-    ...tareasVisibles.filter(t => t.estado === 'realizado')
+    ...tareasNormales.filter(t => t.estado === 'pendiente'),
+    ...tareasNormales.filter(t => t.estado === 'realizado')
   ];
   
   const eventosHoy = eventosAgenda.filter(ev => ev.dia === diaSeleccionado && ev.tipo !== 'lejana');
@@ -395,13 +399,19 @@ function App() {
     e.preventDefault();
     if (!nuevaTarea.trim()) return;
     const origen = esAdministrador ? 'padres' : 'propio';
-    const para = esAdministrador ? nuevoPara : nombre;
+    let paraDestino = esAdministrador ? nuevoPara : nombre;
+    if (nuevoTipoAsignacion === 'recurrente') {
+      paraDestino = 'recurrentes';
+    } else if (nuevoTipoAsignacion === 'turnos' && listaHijosArr.length > 0) {
+      // Asignar automáticamente al primer hijo en rotación o según selección
+      paraDestino = listaHijosArr[0];
+    }
     
     const nuevaObj = {
       texto: nuevaTarea.trim(),
       estado: 'pendiente',
       origen,
-      para,
+      para: paraDestino,
       familia: familia.nombreFamilia
     };
 
@@ -614,6 +624,21 @@ function App() {
                   )}
                 </div>
 
+                {/* CUADRO DE ACTIVIDADES RECURRENTES FIJAS EN EL INICIO */}
+                {tareasRecurrentes.length > 0 && (
+                  <div className="board-box" style={{ background: 'linear-gradient(135deg, #f3e8ff 0%, #fae8ff 100%)', border: '1px solid #d8b4fe' }}>
+                    <div className="board-title" style={{ color: '#7c3aed' }}>🔄 Actividades Recurrentes</div>
+                    <ul className="duties-list">
+                      {tareasRecurrentes.map(t => (
+                        <li key={t.id} className="duty-row" style={{ fontWeight: '800', color: '#581c87' }}>
+                          <span className="duty-mark">📌</span>
+                          <span className="duty-text">{t.texto}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="phone-time">
                   <div className="phone-time-row">
                     <span className="phone-icon">📱</span>
@@ -658,12 +683,33 @@ function App() {
         </>
       )}
 
-      {/* VISTA DE DEBERES / ASIGNACIÓN (MODERNIZADA CON ESTILO DE TARJETAS VIVAS Y BOTONES PÍLDORA) */}
+      {/* VISTA DE DEBERES / ASIGNACIÓN (DISEÑO RENOVADO Y ATRACTIVO) */}
       {currentView === 'tareas' && (
-        <div className="tasks-board-section">
-          <div className="tasks-board-header">
-            <h3>{esAdministrador ? 'Asignar Deberes a los Hijos' : 'Mis Deberes'}</h3>
-            <span className="tasks-subtitle">{esAdministrador ? 'Crea tareas y asígnalas a tus hijos' : mensajeProgreso()}</span>
+        <div className="tasks-board-section" style={{ width: '100%', boxSizing: 'border-box' }}>
+          
+          {/* FRanja de título alineada a la izquierda */}
+          <div style={{
+            background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+            width: 'calc(100% + 36px)',
+            marginLeft: '-18px',
+            marginRight: '-18px',
+            marginTop: '-18px',
+            padding: '16px 20px',
+            color: '#ffffff',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: '4px',
+            marginBottom: '16px',
+            boxSizing: 'border-box',
+            boxShadow: '0 4px 15px rgba(124, 58, 237, 0.25)'
+          }}>
+            <h3 style={{ color: '#ffffff', fontSize: '19px', fontWeight: '900', margin: 0, textAlign: 'left' }}>
+              {esAdministrador ? 'Asignar Deberes a los Hijos' : 'Mis Deberes'}
+            </h3>
+            <span style={{ fontSize: '13px', color: '#ede9fe', fontWeight: '700', textAlign: 'left' }}>
+              {esAdministrador ? 'Crea tareas, recurrentes y por turnos' : mensajeProgreso()}
+            </span>
           </div>
 
           {!esAdministrador && (
@@ -673,49 +719,51 @@ function App() {
           )}
 
           {esAdministrador ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
               {listaHijosArr.length === 0 ? (
                 <p className="duties-empty">Aún no hay hijos registrados en este hogar.</p>
               ) : (
                 listaHijosArr.map(hijo => {
                   const tareasHijo = tareasDeberes.filter(t => t.para === hijo || t.para === 'todos');
                   return (
-                    <div key={hijo} style={{ background: '#f8fafc', padding: '18px', borderRadius: '22px', border: '1.5px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                    <div key={hijo} style={{ background: '#f8fafc', padding: '16px', borderRadius: '20px', border: '1.5px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '13.5px', fontWeight: '900', color: '#4338ca' }}>Deberes de</span>
-                        <span style={{ fontSize: '12.5px', background: 'linear-gradient(135deg, #ede9fe 0%, #fae8ff 100%)', color: '#7c3aed', padding: '5px 14px', borderRadius: '999px', fontWeight: '900', border: '1px solid #d8b4fe' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '900', color: '#4338ca' }}>Deberes de</span>
+                        <span style={{ fontSize: '12px', background: '#ede9fe', color: '#7c3aed', padding: '4px 12px', borderRadius: '999px', fontWeight: '900' }}>
                           {hijo}
                         </span>
                       </div>
                       
                       {tareasHijo.length === 0 ? (
-                        <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', padding: '8px 0' }}>Sin deberes asignados para este hijo</p>
+                        <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Sin deberes asignados</p>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {tareasHijo.map((tarea, index) => {
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                          {tareasHijo.map((tarea, idx) => {
                             const esRealizado = tarea.estado === 'realizado';
                             const esSuTareaCreada = tarea.origen !== 'padres';
-                            const paletaVibrante = [
-                              { bg: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', border: '#cbd5e1', accent: '#7c3aed' },
-                              { bg: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)', border: '#fbcfe8', accent: '#db2777' },
-                              { bg: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '#a7f3d0', accent: '#059669' },
-                              { bg: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '#bfdbfe', accent: '#2563eb' }
+                            const paleta10Vivos = [
+                              { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
+                              { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
+                              { bg: '#ffedd5', border: '#fb923c', top: '#ea580c' },
+                              { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' },
+                              { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' }
                             ];
-                            const tarjetaEstilo = paletaVibrante[index % paletaVibrante.length];
+                            const col = paleta10Vivos[idx % paleta10Vivos.length];
 
                             return (
                               <div 
                                 key={tarea.id} 
                                 style={{ 
-                                  padding: '16px', 
-                                  borderRadius: '20px', 
+                                  width: '100%',
+                                  padding: '12px 14px', 
+                                  borderRadius: '14px', 
                                   display: 'flex', 
                                   flexDirection: 'column', 
-                                  gap: '10px', 
-                                  background: esRealizado ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : tarjetaEstilo.bg, 
-                                  border: `1.5px solid ${esRealizado ? '#34d399' : tarjetaEstilo.border}`,
+                                  gap: '4px', 
+                                  background: esRealizado ? '#f0fdf4' : col.bg, 
+                                  border: `1.5px solid ${esRealizado ? '#34d399' : col.border}`,
                                   position: 'relative',
-                                  boxShadow: '0 6px 16px rgba(0,0,0,0.03)'
+                                  boxSizing: 'border-box'
                                 }}
                               >
                                 {(esAdministrador || esSuTareaCreada) && (
@@ -724,47 +772,53 @@ function App() {
                                     className="task-delete-btn" 
                                     onClick={() => eliminarTarea(tarea.id)} 
                                     aria-label="Eliminar deber"
-                                    style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1' }}
+                                    style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
                                   >
                                     ✕
                                   </button>
                                 )}
 
-                                <span style={{ fontSize: '15.5px', fontWeight: '900', color: '#0f172a', paddingRight: '28px', lineHeight: '1.3', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
                                   {tarea.texto}
                                 </span>
 
-                                <span style={{ fontSize: '11.5px', color: '#475569', fontWeight: '800' }}>
-                                  {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
-                                </span>
+                                {/* INSIGNIA OVALADA PARA ASIGNADO POR */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
+                                    {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
+                                  </span>
+                                </div>
 
                                 {tarea.evidencia_url && (
                                   <div 
                                     onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                                    style={{ background: '#fff', padding: '6px 10px', borderRadius: '12px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                                    style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
                                   >
-                                    <span style={{ fontSize: '12px', color: '#7c3aed', fontWeight: '900', textDecoration: 'underline' }}>
-                                      📷 Ver foto de evidencia
+                                    <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 'bold', textDecoration: 'underline' }}>
+                                      Ver foto de evidencia
                                     </span>
-                                    <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                                    <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
                                   </div>
                                 )}
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                                   <button 
                                     type="button"
-                                    style={{ 
-                                      fontSize: '12.5px', 
-                                      padding: '8px 18px', 
-                                      borderRadius: '999px', 
+                                    style={{
+                                      fontSize: '11.5px',
+                                      padding: '6px 14px',
+                                      borderRadius: '999px',
                                       fontWeight: '900',
-                                      background: esRealizado ? '#e2e8f0' : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                                      background: esRealizado ? '#e2e8f0' : '#7c3aed',
                                       color: esRealizado ? '#475569' : '#ffffff',
                                       border: 'none',
-                                      boxShadow: esRealizado ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.3)',
                                       cursor: 'pointer'
                                     }}
                                     onClick={async () => {
+                                      if (!tarea.evidencia_url) {
+                                        alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
+                                        return;
+                                      }
                                       const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
                                       const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
                                       setTareasDeberes(actualizadas);
@@ -775,7 +829,7 @@ function App() {
                                     {esRealizado ? 'Marcar Pendiente' : 'Completar / Hecho'}
                                   </button>
 
-                                  <span style={{ fontSize: '13px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
+                                  <span style={{ fontSize: '12px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
                                     {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
                                   </span>
                                 </div>
@@ -790,35 +844,37 @@ function App() {
               )}
             </div>
           ) : (
-            <div className="tasks-grid-container" style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
               {tareasVisibles.length === 0 ? (
-                <p className="duties-empty">Aún no tienes deberes. Agrégalos o pídele a tus papás que te asignen 🌱</p>
+                <p className="duties-empty">Aún no tienes deberes pendientes. ¡Buen trabajo! 🌱</p>
               ) : (
-                tareasVisibles.map((tarea, index) => {
+                tareasVisibles.map((tarea, idx) => {
                   const esRealizado = tarea.estado === 'realizado';
                   const esSuTareaCreada = tarea.origen !== 'padres';
                   const puedeBorrar = esAdministrador || esSuTareaCreada;
-                  const paletaVibrante = [
-                    { bg: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', border: '#cbd5e1' },
-                    { bg: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)', border: '#fbcfe8' },
-                    { bg: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '#a7f3d0' },
-                    { bg: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '#bfdbfe' }
+                  const paleta10Vivos = [
+                    { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
+                    { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
+                    { bg: '#ffedd5', border: '#fb923c', top: '#ea580c' },
+                    { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' },
+                    { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' }
                   ];
-                  const tarjetaEstilo = paletaVibrante[index % paletaVibrante.length];
+                  const col = paleta10Vivos[idx % paleta10Vivos.length];
 
                   return (
                     <div 
                       key={tarea.id} 
                       style={{ 
-                        padding: '16px', 
-                        borderRadius: '20px', 
+                        width: '100%',
+                        padding: '12px 14px', 
+                        borderRadius: '14px', 
                         display: 'flex', 
                         flexDirection: 'column', 
-                        gap: '10px', 
-                        background: esRealizado ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : tarjetaEstilo.bg, 
-                        border: `1.5px solid ${esRealizado ? '#34d399' : tarjetaEstilo.border}`,
+                        gap: '4px', 
+                        background: esRealizado ? '#f0fdf4' : col.bg, 
+                        border: `1.5px solid ${esRealizado ? '#34d399' : col.border}`,
                         position: 'relative',
-                        boxShadow: '0 6px 16px rgba(0,0,0,0.03)'
+                        boxSizing: 'border-box'
                       }}
                     >
                       {puedeBorrar && (
@@ -827,48 +883,54 @@ function App() {
                           className="task-delete-btn" 
                           onClick={() => eliminarTarea(tarea.id)} 
                           aria-label="Eliminar deber"
-                          style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1' }}
+                          style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
                         >
                           ✕
                         </button>
                       )}
 
-                      <span style={{ fontSize: '15.5px', fontWeight: '900', color: '#0f172a', paddingRight: '28px', lineHeight: '1.3', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                      <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
                         {tarea.texto}
                       </span>
 
-                      <span style={{ fontSize: '11.5px', color: '#475569', fontWeight: '800' }}>
-                        {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
-                      </span>
+                      {/* INSIGNIA OVALADA PARA ASIGNADO POR */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
+                          {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
+                        </span>
+                      </div>
 
                       {tarea.evidencia_url && (
                         <div 
                           onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                          style={{ background: '#fff', padding: '6px 10px', borderRadius: '12px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                          style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
                         >
-                          <span style={{ fontSize: '12px', color: '#7c3aed', fontWeight: '900', textDecoration: 'underline' }}>
-                            📷 Ver foto de evidencia
+                          <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 'bold', textDecoration: 'underline' }}>
+                            Ver foto de evidencia
                           </span>
-                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
                         </div>
                       )}
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                           <button 
                             type="button"
-                            style={{ 
-                              fontSize: '12.5px', 
-                              padding: '8px 18px', 
-                              borderRadius: '999px', 
+                            style={{
+                              fontSize: '11.5px',
+                              padding: '6px 14px',
+                              borderRadius: '999px',
                               fontWeight: '900',
-                              background: esRealizado ? '#e2e8f0' : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                              background: esRealizado ? '#e2e8f0' : '#7c3aed',
                               color: esRealizado ? '#475569' : '#ffffff',
                               border: 'none',
-                              boxShadow: esRealizado ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.3)',
                               cursor: 'pointer'
                             }}
                             onClick={async () => {
+                              if (!tarea.evidencia_url) {
+                                alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
+                                return;
+                              }
                               const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
                               const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
                               setTareasDeberes(actualizadas);
@@ -879,8 +941,8 @@ function App() {
                             {esRealizado ? 'Marcar Pendiente' : 'Completar / Hecho'}
                           </button>
 
-                          <label style={{ cursor: 'pointer', fontSize: '12px', background: '#ffffff', color: '#7c3aed', padding: '8px 14px', borderRadius: '999px', fontWeight: '900', display: 'inline-flex', alignItems: 'center', border: '1.5px solid #d8b4fe', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                            📷 Tomar foto
+                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ffffff', color: '#7c3aed', padding: '6px 12px', borderRadius: '999px', fontWeight: '900', display: 'inline-flex', alignItems: 'center', border: '1.5px solid #d8b4fe' }}>
+                            Tomar foto
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -908,7 +970,7 @@ function App() {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                          <span style={{ fontSize: '13px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
+                          <span style={{ fontSize: '12px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
                             {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
                           </span>
                         </div>
@@ -920,23 +982,52 @@ function App() {
             </div>
           )}
 
-          <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '16px' }}>
+          {/* CUADRO DE ACTIVIDADES RECURRENTES (FIJAS) */}
+          {tareasRecurrentes.length > 0 && (
+            <div style={{ background: '#f5f3ff', border: '1.5px solid #d8b4fe', borderRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+              <span style={{ fontSize: '13px', fontWeight: '900', color: '#6d28d9', textAlign: 'left' }}>🔄 Actividades Recurrentes (Fijas)</span>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {tareasRecurrentes.map(tr => (
+                  <li key={tr.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e9d5ff' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#4c1d95' }}>📌 {tr.texto}</span>
+                    {esAdministrador && (
+                      <button onClick={() => eliminarTarea(tr.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer' }}>✕</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* FORMULARIO DE ASIGNACIÓN CON OPCIÓN DE RECURRENTES Y TURNOS */}
+          <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '16px', width: '100%', boxSizing: 'border-box' }}>
             <input
               type="text"
               className="input-custom"
-              placeholder={esAdministrador ? "Escribe la tarea para tus hijos..." : "Nuevo deber (Ej: Ordenar mi cuarto)"}
+              placeholder={esAdministrador ? "Escribe la tarea o deber..." : "Nuevo deber personal..."}
               value={nuevaTarea}
               onChange={(e) => setNuevaTarea(e.target.value)}
+              style={{ width: '100%' }}
             />
-            <button type="submit" className="btn-add-event">+ Agregar</button>
+            
             {esAdministrador && (
-              <div className="task-options">
-                <select className="select-custom" value={nuevoPara} onChange={(e) => setNuevoPara(e.target.value)}>
-                  <option value="todos">Para todos los hijos</option>
-                  {listaHijosArr.map(h => <option key={h} value={h}>Para {h}</option>)}
-                </select>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select className="select-custom" value={nuevoPara} onChange={(e) => setNuevoPara(e.target.value)} style={{ flex: 1 }}>
+                    <option value="todos">Para todos los hijos</option>
+                    {listaHijosArr.map(h => <option key={h} value={h}>Para {h}</option>)}
+                  </select>
+
+                  <select className="select-custom" value={nuevoTipoAsignacion} onChange={(e) => setNuevoTipoAsignacion(e.target.value)} style={{ flex: 1 }}>
+                    <option value="normal">Normal (Semanal)</option>
+                    <option value="recurrente">Por turnos / Recurrente (Diario)</option>
+                    <option value="turnos">Por turnos (Rotativo)</option>
+                  </select>
+                </div>
               </div>
             )}
+
+            <button type="submit" className="btn-add-event" style={{ width: '100%', marginTop: '4px' }}>+ Agregar Deber</button>
           </form>
         </div>
       )}
