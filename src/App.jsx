@@ -29,27 +29,33 @@ const formatearFechaAmigable = (fechaStr) => {
 };
 
 const parsearTareaTexto = (textoOriginal) => {
-  if (!textoOriginal) return { titulo: '', recurrencia: '', momento: '' };
+  if (!textoOriginal) return { titulo: '', tipo: '', frecuencia: '', momento: '' };
   let titulo = textoOriginal;
-  let recurrencia = '';
+  let tipo = '';
+  let frecuencia = '';
   let momento = '';
 
   if (textoOriginal.includes('|')) {
     const pedazos = textoOriginal.split('|');
     titulo = pedazos[0].trim();
     pedazos.forEach(p => {
-      if (p.includes('Recurrencia:')) {
-        recurrencia = p.replace('Recurrencia:', '').trim();
-      } else if (p.includes('Momento:')) {
-        momento = p.replace('Momento:', '').trim();
-      } else if (p.includes('[Recurrente:')) {
-        recurrencia = p.replace('[Recurrente:', '').replace(']', '').trim();
-      } else if (p.includes('[Turnos:')) {
-        recurrencia = p.replace('[Turnos:', '').replace(']', '').trim();
+      const text = p.trim();
+      if (text.startsWith('Tipo:')) {
+        tipo = text.replace('Tipo:', '').trim();
+      } else if (text.startsWith('Frecuencia:')) {
+        frecuencia = text.replace('Frecuencia:', '').trim();
+      } else if (text.startsWith('Momento:')) {
+        momento = text.replace('Momento:', '').trim();
+      } else if (text.includes('[Recurrente:')) {
+        tipo = 'Recurrente';
+        frecuencia = text.replace('[Recurrente:', '').replace(']', '').trim();
+      } else if (text.includes('[Turnos:')) {
+        tipo = 'Por turnos';
+        frecuencia = text.replace('[Turnos:', '').replace(']', '').trim();
       }
     });
   }
-  return { titulo, recurrencia, momento };
+  return { titulo, tipo, frecuencia, momento };
 };
 
 const saludos = [
@@ -426,17 +432,20 @@ function App() {
     const origen = esAdministrador ? 'padres' : 'propio';
     
     let destinoPara = nuevoPara;
-    let etiquetaExtra = '';
+    let tipoStr = 'Normal';
+    let frecuenciaStr = '';
 
     if (tipoAsignacion === 'recurrente_normal') {
-      etiquetaExtra = ` | Recurrencia: ${frecuenciaRecurrente}`;
+      tipoStr = 'Recurrente';
+      frecuenciaStr = frecuenciaRecurrente;
     } else if (tipoAsignacion === 'recurrente_rotativo') {
       const hijoAsignado = hijoInicioRotacion || (listaHijosArr.length > 0 ? listaHijosArr[0] : 'General');
       destinoPara = hijoAsignado;
-      etiquetaExtra = ` | Recurrencia: ${frecuenciaRecurrente}`;
+      tipoStr = 'Por turnos';
+      frecuenciaStr = frecuenciaRecurrente;
     }
 
-    const textoFinal = `${nuevaTarea.trim()}${etiquetaExtra} | Momento: ${momentoDia}`;
+    const textoFinal = `${nuevaTarea.trim()} | Tipo: ${tipoStr} | Frecuencia: ${frecuenciaStr} | Momento: ${momentoDia}`;
 
     const nuevaObj = {
       texto: textoFinal,
@@ -607,12 +616,12 @@ function App() {
                                     <span style={{ fontWeight: '800' }}>{tituloReal}</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                       {momentoReal && (
-                                        <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px' }}>
+                                        <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '800' }}>
                                           {momentoReal}
                                         </span>
                                       )}
                                       <span style={{ color: t.estado === 'realizado' ? '#16a34a' : '#d97706', fontWeight: 'bold' }}>
-                                        {t.estado === 'realizado' ? '✅ Hecho' : '⏳ Pendiente'}
+                                        {t.estado === 'realizado' ? 'Realizado' : 'Pendiente'}
                                       </span>
                                     </div>
                                   </li>
@@ -663,13 +672,15 @@ function App() {
                                 <span className="duty-mark">{t.estado === 'realizado' ? '✓' : ''}</span>
                                 <span className="duty-text">{t.origen === 'padres' ? '👨‍👩‍👧 ' : ''}{tituloReal}</span>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {momentoReal && (
-                                  <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px' }}>
+                                  <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '800' }}>
                                     {momentoReal}
                                   </span>
                                 )}
-                                <span className={`duty-pill ${t.estado}`}>{t.estado === 'realizado' ? 'Realizado' : 'Pendiente'}</span>
+                                <span style={{ color: t.estado === 'realizado' ? '#059669' : '#d97706', fontWeight: '800', fontSize: '12px' }}>
+                                  {t.estado === 'realizado' ? 'Realizado' : 'Pendiente'}
+                                </span>
                               </div>
                             </div>
                           </li>
@@ -787,7 +798,13 @@ function App() {
                             {tareasHijo.map((tarea, idx) => {
                               const esRealizado = tarea.estado === 'realizado';
                               const esSuTareaCreada = tarea.origen !== 'padres';
-                              const { titulo: tituloReal, recurrencia: recurrenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
+                              const { titulo: tituloReal, tipo: tipoReal, frecuencia: frecuenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
+                              
+                              const textoSegundaLinea = [
+                                momentoReal, 
+                                tipoReal !== 'Normal' ? tipoReal : '', 
+                                frecuenciaReal
+                              ].filter(Boolean).join(' - ');
 
                               const paleta10Vivos = [
                                 { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
@@ -840,9 +857,9 @@ function App() {
                                     {tituloReal}
                                   </span>
 
-                                  {momentoReal && (
-                                    <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
-                                      {momentoReal} {recurrenciaReal ? `• ${recurrenciaReal}` : ''}
+                                  {textoSegundaLinea && (
+                                    <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content', textTransform: 'lowercase' }}>
+                                      {textoSegundaLinea}
                                     </span>
                                   )}
 
@@ -915,7 +932,13 @@ function App() {
                     const esRealizado = tarea.estado === 'realizado';
                     const esSuTareaCreada = tarea.origen !== 'padres';
                     const puedeBorrar = esAdministrador || esSuTareaCreada;
-                    const { titulo: tituloReal, recurrencia: recurrenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
+                    const { titulo: tituloReal, tipo: tipoReal, frecuencia: frecuenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
+                    
+                    const textoSegundaLinea = [
+                      momentoReal, 
+                      tipoReal !== 'Normal' ? tipoReal : '', 
+                      frecuenciaReal
+                    ].filter(Boolean).join(' - ');
 
                     const paleta10Vivos = [
                       { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
@@ -968,9 +991,9 @@ function App() {
                           {tituloReal}
                         </span>
 
-                        {momentoReal && (
-                          <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
-                            {momentoReal} {recurrenciaReal ? `• ${recurrenciaReal}` : ''}
+                        {textoSegundaLinea && (
+                          <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content', textTransform: 'lowercase' }}>
+                            {textoSegundaLinea}
                           </span>
                         )}
 
@@ -1105,9 +1128,9 @@ function App() {
 
                   <div style={{ display: 'flex', width: '100%' }}>
                     <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
-                      <option value="Mañana">Momento: Mañana</option>
-                      <option value="Tarde">Momento: Tarde</option>
-                      <option value="Noche">Momento: Noche</option>
+                      <option value="Mañana">Mañana</option>
+                      <option value="Tarde">Tarde</option>
+                      <option value="Noche">Noche</option>
                     </select>
                   </div>
                 </div>
@@ -1116,9 +1139,9 @@ function App() {
               {!esAdministrador && (
                 <div style={{ display: 'flex', width: '100%', marginTop: '6px' }}>
                   <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
-                    <option value="Mañana">Momento: Mañana</option>
-                    <option value="Tarde">Momento: Tarde</option>
-                    <option value="Noche">Momento: Noche</option>
+                    <option value="Mañana">Mañana</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noche">Noche</option>
                   </select>
                 </div>
               )}
