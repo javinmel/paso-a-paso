@@ -910,14 +910,14 @@ function App() {
         </div>
       )}
 
-      {currentView === 'calendar' && (
-        <div className="spiritual-panel" style={{ 
+{currentView === 'calendar' && (
+        <div style={{ 
           width: 'calc(100% + 28px)', 
           marginLeft: '-14px', 
           marginRight: '-14px', 
           boxSizing: 'border-box', 
-          background: '#fdfcfe', 
-          padding: '0 0 16px 0', 
+          background: 'transparent', 
+          padding: '0', 
           border: 'none', 
           boxShadow: 'none' 
         }}>
