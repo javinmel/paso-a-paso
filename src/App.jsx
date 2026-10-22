@@ -28,6 +28,30 @@ const formatearFechaAmigable = (fechaStr) => {
   return fechaStr;
 };
 
+const parsearTareaTexto = (textoOriginal) => {
+  if (!textoOriginal) return { titulo: '', recurrencia: '', momento: '' };
+  let titulo = textoOriginal;
+  let recurrencia = '';
+  let momento = '';
+
+  if (textoOriginal.includes('|')) {
+    const pedazos = textoOriginal.split('|');
+    titulo = pedazos[0].trim();
+    pedazos.forEach(p => {
+      if (p.includes('Recurrencia:')) {
+        recurrencia = p.replace('Recurrencia:', '').trim();
+      } else if (p.includes('Momento:')) {
+        momento = p.replace('Momento:', '').trim();
+      } else if (p.includes('[Recurrente:')) {
+        recurrencia = p.replace('[Recurrente:', '').replace(']', '').trim();
+      } else if (p.includes('[Turnos:')) {
+        recurrencia = p.replace('[Turnos:', '').replace(']', '').trim();
+      }
+    });
+  }
+  return { titulo, recurrencia, momento };
+};
+
 const saludos = [
   '¡Qué alegría verte de vuelta!',
   '¿Cómo está lo más lindo de la casa?',
@@ -405,11 +429,11 @@ function App() {
     let etiquetaExtra = '';
 
     if (tipoAsignacion === 'recurrente_normal') {
-      etiquetaExtra = ` [Recurrente: ${frecuenciaRecurrente}]`;
+      etiquetaExtra = ` | Recurrencia: ${frecuenciaRecurrente}`;
     } else if (tipoAsignacion === 'recurrente_rotativo') {
       const hijoAsignado = hijoInicioRotacion || (listaHijosArr.length > 0 ? listaHijosArr[0] : 'General');
       destinoPara = hijoAsignado;
-      etiquetaExtra = ` [Turnos: ${frecuenciaRecurrente}]`;
+      etiquetaExtra = ` | Recurrencia: ${frecuenciaRecurrente}`;
     }
 
     const textoFinal = `${nuevaTarea.trim()}${etiquetaExtra} | Momento: ${momentoDia}`;
@@ -497,12 +521,12 @@ function App() {
       <ul className="duties-list">
         <li className={`duty-row ${textoLeidoHoy ? 'realizado' : 'pendiente'}`}>
           <span className="duty-mark">{textoLeidoHoy ? '✓' : ''}</span>
-          <span className="duty-text">📖 Texto diario</span>
+          <span className="duty-text">Texto diario</span>
           <span className={`duty-pill ${textoLeidoHoy ? 'realizado' : 'pendiente'}`}>{textoLeidoHoy ? 'Realizado' : 'Pendiente'}</span>
         </li>
         <li className={`duty-row ${lecturaHoy ? 'realizado' : 'pendiente'}`}>
           <span className="duty-mark">{lecturaHoy ? '✓' : ''}</span>
-          <span className="duty-text">🌿 Lectura bíblica · {totalCapitulos} cap.</span>
+          <span className="duty-text">Lectura bíblica · {totalCapitulos} cap.</span>
           <span className={`duty-pill ${lecturaHoy ? 'realizado' : 'pendiente'}`}>{lecturaHoy ? 'Realizado' : 'Pendiente'}</span>
         </li>
       </ul>
@@ -513,7 +537,7 @@ function App() {
     <div className="app-container">
       {(!familia || !nombre) && <Onboarding familiaInicial={familia} onFamiliaCreada={manejarFamiliaCreada} />}
 
-      <header className="app-header" style={{ position: 'sticky', top: 0, zIndex: 1000, background: '#f8fafc', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <header className="app-header" style={{ position: 'sticky', top: 0, zIndex: 1000, background: '#f8fafc', padding: '10px 14px', borderBottom: '1px solid #f1f5f9', width: 'calc(100% + 28px)', marginLeft: '-14px', marginRight: '-14px', boxSizing: 'border-box' }}>
         <div className="header-left">
           {currentView !== 'home' ? (
             <button className="icon-btn" onClick={() => setCurrentView('home')}>⬅️ Volver</button>
@@ -577,18 +601,20 @@ function App() {
                           ) : (
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               {tareasHijo.map(t => {
-                                const partesTexto = t.texto.split('| Momento:');
-                                const tituloReal = partesTexto[0].trim();
-                                const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+                                const { titulo: tituloReal, momento: momentoReal } = parsearTareaTexto(t.texto);
                                 return (
                                   <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', background: '#fff', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                      <span>{tituloReal}</span>
-                                      {momentoReal && <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: 'bold' }}>🕒 {momentoReal}</span>}
+                                    <span style={{ fontWeight: '800' }}>{tituloReal}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      {momentoReal && (
+                                        <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px' }}>
+                                          {momentoReal}
+                                        </span>
+                                      )}
+                                      <span style={{ color: t.estado === 'realizado' ? '#16a34a' : '#d97706', fontWeight: 'bold' }}>
+                                        {t.estado === 'realizado' ? '✅ Hecho' : '⏳ Pendiente'}
+                                      </span>
                                     </div>
-                                    <span style={{ color: t.estado === 'realizado' ? '#16a34a' : '#d97706', fontWeight: 'bold' }}>
-                                      {t.estado === 'realizado' ? '✅ Hecho' : '⏳ Pendiente'}
-                                    </span>
                                   </li>
                                 );
                               })}
@@ -629,21 +655,23 @@ function App() {
                   ) : (
                     <ul className="duties-list">
                       {tareasOrdenadas.map(t => {
-                        const partesTexto = t.texto.split('| Momento:');
-                        const tituloReal = partesTexto[0].trim();
-                        const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+                        const { titulo: tituloReal, momento: momentoReal } = parsearTareaTexto(t.texto);
                         return (
                           <li key={t.id} className={`duty-row ${t.estado}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px', padding: '4px 0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px' }}>
-                              <span className="duty-mark">{t.estado === 'realizado' ? '✓' : ''}</span>
-                              <span className="duty-text">{t.origen === 'padres' ? '👨‍👩‍👧 ' : ''}{tituloReal}</span>
-                              <span className={`duty-pill ${t.estado}`}>{t.estado === 'realizado' ? 'Realizado' : 'Pendiente'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '6px', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span className="duty-mark">{t.estado === 'realizado' ? '✓' : ''}</span>
+                                <span className="duty-text">{t.origen === 'padres' ? '👨‍👩‍👧 ' : ''}{tituloReal}</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {momentoReal && (
+                                  <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px' }}>
+                                    {momentoReal}
+                                  </span>
+                                )}
+                                <span className={`duty-pill ${t.estado}`}>{t.estado === 'realizado' ? 'Realizado' : 'Pendiente'}</span>
+                              </div>
                             </div>
-                            {momentoReal && (
-                              <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', marginLeft: '20px' }}>
-                                🕒 {momentoReal}
-                              </span>
-                            )}
                           </li>
                         );
                       })}
@@ -759,9 +787,7 @@ function App() {
                             {tareasHijo.map((tarea, idx) => {
                               const esRealizado = tarea.estado === 'realizado';
                               const esSuTareaCreada = tarea.origen !== 'padres';
-                              const partesTexto = tarea.texto.split('| Momento:');
-                              const tituloReal = partesTexto[0].trim();
-                              const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+                              const { titulo: tituloReal, recurrencia: recurrenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
 
                               const paleta10Vivos = [
                                 { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
@@ -793,25 +819,30 @@ function App() {
                                     boxSizing: 'border-box'
                                   }}
                                 >
+                                  {/* TACHUELA EN LA PARTE SUPERIOR DERECHA */}
+                                  <div style={{ position: 'absolute', top: '8px', right: (esAdministrador || esSuTareaCreada) ? '36px' : '10px', fontSize: '14px', opacity: 0.85 }}>
+                                    📌
+                                  </div>
+
                                   {(esAdministrador || esSuTareaCreada) && (
                                     <button 
                                       type="button" 
                                       className="task-delete-btn" 
                                       onClick={() => eliminarTarea(tarea.id)} 
                                       aria-label="Eliminar deber"
-                                      style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
+                                      style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
                                     >
                                       ✕
                                     </button>
                                   )}
 
-                                  <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
+                                  <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '50px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
                                     {tituloReal}
                                   </span>
 
                                   {momentoReal && (
                                     <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
-                                      🕒 {momentoReal}
+                                      {momentoReal} {recurrenciaReal ? `• ${recurrenciaReal}` : ''}
                                     </span>
                                   )}
 
@@ -884,9 +915,7 @@ function App() {
                     const esRealizado = tarea.estado === 'realizado';
                     const esSuTareaCreada = tarea.origen !== 'padres';
                     const puedeBorrar = esAdministrador || esSuTareaCreada;
-                    const partesTexto = tarea.texto.split('| Momento:');
-                    const tituloReal = partesTexto[0].trim();
-                    const momentoReal = partesTexto[1] ? partesTexto[1].trim() : '';
+                    const { titulo: tituloReal, recurrencia: recurrenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
 
                     const paleta10Vivos = [
                       { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
@@ -918,25 +947,30 @@ function App() {
                           boxSizing: 'border-box'
                         }}
                       >
+                        {/* TACHUELA EN LA PARTE SUPERIOR DERECHA */}
+                        <div style={{ position: 'absolute', top: '8px', right: puedeBorrar ? '36px' : '10px', fontSize: '14px', opacity: 0.85 }}>
+                          📌
+                        </div>
+
                         {puedeBorrar && (
                           <button 
                             type="button" 
                             className="task-delete-btn" 
                             onClick={() => eliminarTarea(tarea.id)} 
                             aria-label="Eliminar deber"
-                            style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
+                            style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
                           >
                             ✕
                           </button>
                         )}
 
-                        <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
+                        <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '50px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
                           {tituloReal}
                         </span>
 
                         {momentoReal && (
                           <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '800', background: '#f3e8ff', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
-                            🕒 {momentoReal}
+                            {momentoReal} {recurrenciaReal ? `• ${recurrenciaReal}` : ''}
                           </span>
                         )}
 
@@ -1071,9 +1105,9 @@ function App() {
 
                   <div style={{ display: 'flex', width: '100%' }}>
                     <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
-                      <option value="Mañana">☀️ Momento: Mañana</option>
-                      <option value="Tarde">🌤️ Momento: Tarde</option>
-                      <option value="Noche">🌙 Momento: Noche</option>
+                      <option value="Mañana">Momento: Mañana</option>
+                      <option value="Tarde">Momento: Tarde</option>
+                      <option value="Noche">Momento: Noche</option>
                     </select>
                   </div>
                 </div>
@@ -1082,9 +1116,9 @@ function App() {
               {!esAdministrador && (
                 <div style={{ display: 'flex', width: '100%', marginTop: '6px' }}>
                   <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
-                    <option value="Mañana">☀️ Momento: Mañana</option>
-                    <option value="Tarde">🌤️ Momento: Tarde</option>
-                    <option value="Noche">🌙 Momento: Noche</option>
+                    <option value="Mañana">Momento: Mañana</option>
+                    <option value="Tarde">Momento: Tarde</option>
+                    <option value="Noche">Momento: Noche</option>
                   </select>
                 </div>
               )}
