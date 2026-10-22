@@ -215,7 +215,10 @@ function App() {
 
   const [nuevaTarea, setNuevaTarea] = useState('');
   const [nuevoPara, setNuevoPara] = useState('todos');
-  const [nuevoTipoAsignacion, setNuevoTipoAsignacion] = useState('normal'); // 'normal', 'recurrente', 'turnos'
+  const [tipoAsignacion, setTipoAsignacion] = useState('normal'); // 'normal', 'recurrente_normal', 'recurrente_rotativo'
+  const [frecuenciaRotacion, setFrecuenciaRotacion] = useState('diaria'); // 'diaria', 'semanal'
+  const [hijoInicioRotacion, setHijoInicioRotacion] = useState('');
+
   const [nuevoTitulo, setNuevoTitulo] = useState('');
   const [nuevoDia, setNuevoDia] = useState('Lunes');
   const [nuevaHora, setNuevaHora] = useState('6:00 PM');
@@ -322,12 +325,9 @@ function App() {
   };
 
   const textoLeidoHoy = textoDiarioDias.includes(fechaHoy());
-  const tareasVisibles = tareasDeberes.filter(t => (t.para || 'todos') === 'todos' || t.para === nombre || t.para === 'recurrentes');
-  const tareasNormales = tareasVisibles.filter(t => t.para !== 'recurrentes');
-  const tareasRecurrentes = tareasDeberes.filter(t => t.para === 'recurrentes');
-
-  const totalTareas = tareasNormales.length;
-  const tareasHechas = tareasNormales.filter(t => t.estado === 'realizado').length;
+  const tareasVisibles = tareasDeberes.filter(t => (t.para || 'todos') === 'todos' || t.para === nombre);
+  const totalTareas = tareasVisibles.length;
+  const tareasHechas = tareasVisibles.filter(t => t.estado === 'realizado').length;
   const porcentaje = totalTareas ? Math.round((tareasHechas / totalTareas) * 100) : 0;
   const totalCapitulos = Object.keys(capitulosCompletados).length;
   const lecturaHoy = lecturaDias.includes(fechaHoy());
@@ -335,8 +335,8 @@ function App() {
   const minutosGanados = tareasHechas * MIN_POR_TAREA;
   
   const tareasOrdenadas = [
-    ...tareasNormales.filter(t => t.estado === 'pendiente'),
-    ...tareasNormales.filter(t => t.estado === 'realizado')
+    ...tareasVisibles.filter(t => t.estado === 'pendiente'),
+    ...tareasVisibles.filter(t => t.estado === 'realizado')
   ];
   
   const eventosHoy = eventosAgenda.filter(ev => ev.dia === diaSeleccionado && ev.tipo !== 'lejana');
@@ -399,19 +399,23 @@ function App() {
     e.preventDefault();
     if (!nuevaTarea.trim()) return;
     const origen = esAdministrador ? 'padres' : 'propio';
-    let paraDestino = esAdministrador ? nuevoPara : nombre;
-    if (nuevoTipoAsignacion === 'recurrente') {
-      paraDestino = 'recurrentes';
-    } else if (nuevoTipoAsignacion === 'turnos' && listaHijosArr.length > 0) {
-      // Asignar automáticamente al primer hijo en rotación o según selección
-      paraDestino = listaHijosArr[0];
-    }
     
+    let destinoPara = nuevoPara;
+    let etiquetaExtra = '';
+
+    if (tipoAsignacion === 'recurrente_normal') {
+      etiquetaExtra = ' [Recurrente]';
+    } else if (tipoAsignacion === 'recurrente_rotativo') {
+      const hijoAsignado = hijoInicioRotacion || (listaHijosArr.length > 0 ? listaHijosArr[0] : 'General');
+      destinoPara = hijoAsignado;
+      etiquetaExtra = ` [Turnos: ${frecuenciaRotacion}]`;
+    }
+
     const nuevaObj = {
-      texto: nuevaTarea.trim(),
+      texto: (nuevaTarea.trim() + etiquetaExtra),
       estado: 'pendiente',
       origen,
-      para: paraDestino,
+      para: esAdministrador ? destinoPara : nombre,
       familia: familia.nombreFamilia
     };
 
@@ -624,21 +628,6 @@ function App() {
                   )}
                 </div>
 
-                {/* CUADRO DE ACTIVIDADES RECURRENTES FIJAS EN EL INICIO */}
-                {tareasRecurrentes.length > 0 && (
-                  <div className="board-box" style={{ background: 'linear-gradient(135deg, #f3e8ff 0%, #fae8ff 100%)', border: '1px solid #d8b4fe' }}>
-                    <div className="board-title" style={{ color: '#7c3aed' }}>🔄 Actividades Recurrentes</div>
-                    <ul className="duties-list">
-                      {tareasRecurrentes.map(t => (
-                        <li key={t.id} className="duty-row" style={{ fontWeight: '800', color: '#581c87' }}>
-                          <span className="duty-mark">📌</span>
-                          <span className="duty-text">{t.texto}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
                 <div className="phone-time">
                   <div className="phone-time-row">
                     <span className="phone-icon">📱</span>
@@ -683,24 +672,30 @@ function App() {
         </>
       )}
 
-      {/* VISTA DE DEBERES / ASIGNACIÓN (DISEÑO RENOVADO Y ATRACTIVO) */}
+      {/* VISTA DE DEBERES / ASIGNACIÓN (PANTALLA COMPLETA LADO A LADO) */}
       {currentView === 'tareas' && (
-        <div className="tasks-board-section" style={{ width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ 
+          width: 'calc(100% + 28px)', 
+          marginLeft: '-14px', 
+          marginRight: '-14px', 
+          boxSizing: 'border-box', 
+          background: '#fdfcfe', 
+          padding: '0 0 20px 0', 
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
           
-          {/* FRanja de título alineada a la izquierda */}
+          {/* Franela superior con título alineado a la izquierda */}
           <div style={{
             background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
-            width: 'calc(100% + 36px)',
-            marginLeft: '-18px',
-            marginRight: '-18px',
-            marginTop: '-18px',
-            padding: '16px 20px',
+            width: '100%',
+            padding: '18px 20px',
             color: '#ffffff',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
             gap: '4px',
-            marginBottom: '16px',
             boxSizing: 'border-box',
             boxShadow: '0 4px 15px rgba(124, 58, 237, 0.25)'
           }}>
@@ -712,323 +707,331 @@ function App() {
             </span>
           </div>
 
-          {!esAdministrador && (
-            <div className="progress-track" aria-label={`Progreso ${porcentaje}%`}>
-              <div className="progress-fill" style={{ width: `${porcentaje}%` }}></div>
-            </div>
-          )}
-
-          {esAdministrador ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
-              {listaHijosArr.length === 0 ? (
-                <p className="duties-empty">Aún no hay hijos registrados en este hogar.</p>
-              ) : (
-                listaHijosArr.map(hijo => {
-                  const tareasHijo = tareasDeberes.filter(t => t.para === hijo || t.para === 'todos');
-                  return (
-                    <div key={hijo} style={{ background: '#f8fafc', padding: '16px', borderRadius: '20px', border: '1.5px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '900', color: '#4338ca' }}>Deberes de</span>
-                        <span style={{ fontSize: '12px', background: '#ede9fe', color: '#7c3aed', padding: '4px 12px', borderRadius: '999px', fontWeight: '900' }}>
-                          {hijo}
-                        </span>
-                      </div>
-                      
-                      {tareasHijo.length === 0 ? (
-                        <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Sin deberes asignados</p>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                          {tareasHijo.map((tarea, idx) => {
-                            const esRealizado = tarea.estado === 'realizado';
-                            const esSuTareaCreada = tarea.origen !== 'padres';
-                            const paleta10Vivos = [
-                              { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
-                              { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
-                              { bg: '#ffedd5', border: '#fb923c', top: '#ea580c' },
-                              { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' },
-                              { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' }
-                            ];
-                            const col = paleta10Vivos[idx % paleta10Vivos.length];
-
-                            return (
-                              <div 
-                                key={tarea.id} 
-                                style={{ 
-                                  width: '100%',
-                                  padding: '12px 14px', 
-                                  borderRadius: '14px', 
-                                  display: 'flex', 
-                                  flexDirection: 'column', 
-                                  gap: '4px', 
-                                  background: esRealizado ? '#f0fdf4' : col.bg, 
-                                  border: `1.5px solid ${esRealizado ? '#34d399' : col.border}`,
-                                  position: 'relative',
-                                  boxSizing: 'border-box'
-                                }}
-                              >
-                                {(esAdministrador || esSuTareaCreada) && (
-                                  <button 
-                                    type="button" 
-                                    className="task-delete-btn" 
-                                    onClick={() => eliminarTarea(tarea.id)} 
-                                    aria-label="Eliminar deber"
-                                    style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-
-                                <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
-                                  {tarea.texto}
-                                </span>
-
-                                {/* INSIGNIA OVALADA PARA ASIGNADO POR */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
-                                    {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
-                                  </span>
-                                </div>
-
-                                {tarea.evidencia_url && (
-                                  <div 
-                                    onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                                    style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
-                                  >
-                                    <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 'bold', textDecoration: 'underline' }}>
-                                      Ver foto de evidencia
-                                    </span>
-                                    <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
-                                  </div>
-                                )}
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                                  <button 
-                                    type="button"
-                                    style={{
-                                      fontSize: '11.5px',
-                                      padding: '6px 14px',
-                                      borderRadius: '999px',
-                                      fontWeight: '900',
-                                      background: esRealizado ? '#e2e8f0' : '#7c3aed',
-                                      color: esRealizado ? '#475569' : '#ffffff',
-                                      border: 'none',
-                                      cursor: 'pointer'
-                                    }}
-                                    onClick={async () => {
-                                      if (!tarea.evidencia_url) {
-                                        alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
-                                        return;
-                                      }
-                                      const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
-                                      const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
-                                      setTareasDeberes(actualizadas);
-                                      localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
-                                      await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
-                                    }}
-                                  >
-                                    {esRealizado ? 'Marcar Pendiente' : 'Completar / Hecho'}
-                                  </button>
-
-                                  <span style={{ fontSize: '12px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
-                                    {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-              {tareasVisibles.length === 0 ? (
-                <p className="duties-empty">Aún no tienes deberes pendientes. ¡Buen trabajo! 🌱</p>
-              ) : (
-                tareasVisibles.map((tarea, idx) => {
-                  const esRealizado = tarea.estado === 'realizado';
-                  const esSuTareaCreada = tarea.origen !== 'padres';
-                  const puedeBorrar = esAdministrador || esSuTareaCreada;
-                  const paleta10Vivos = [
-                    { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
-                    { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
-                    { bg: '#ffedd5', border: '#fb923c', top: '#ea580c' },
-                    { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' },
-                    { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' }
-                  ];
-                  const col = paleta10Vivos[idx % paleta10Vivos.length];
-
-                  return (
-                    <div 
-                      key={tarea.id} 
-                      style={{ 
-                        width: '100%',
-                        padding: '12px 14px', 
-                        borderRadius: '14px', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: '4px', 
-                        background: esRealizado ? '#f0fdf4' : col.bg, 
-                        border: `1.5px solid ${esRealizado ? '#34d399' : col.border}`,
-                        position: 'relative',
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      {puedeBorrar && (
-                        <button 
-                          type="button" 
-                          className="task-delete-btn" 
-                          onClick={() => eliminarTarea(tarea.id)} 
-                          aria-label="Eliminar deber"
-                          style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
-                        >
-                          ✕
-                        </button>
-                      )}
-
-                      <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
-                        {tarea.texto}
-                      </span>
-
-                      {/* INSIGNIA OVALADA PARA ASIGNADO POR */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
-                          {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
-                        </span>
-                      </div>
-
-                      {tarea.evidencia_url && (
-                        <div 
-                          onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
-                          style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
-                        >
-                          <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 'bold', textDecoration: 'underline' }}>
-                            Ver foto de evidencia
-                          </span>
-                          <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
-                        </div>
-                      )}
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <button 
-                            type="button"
-                            style={{
-                              fontSize: '11.5px',
-                              padding: '6px 14px',
-                              borderRadius: '999px',
-                              fontWeight: '900',
-                              background: esRealizado ? '#e2e8f0' : '#7c3aed',
-                              color: esRealizado ? '#475569' : '#ffffff',
-                              border: 'none',
-                              cursor: 'pointer'
-                            }}
-                            onClick={async () => {
-                              if (!tarea.evidencia_url) {
-                                alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
-                                return;
-                              }
-                              const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
-                              const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
-                              setTareasDeberes(actualizadas);
-                              localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
-                              await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
-                            }}
-                          >
-                            {esRealizado ? 'Marcar Pendiente' : 'Completar / Hecho'}
-                          </button>
-
-                          <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ffffff', color: '#7c3aed', padding: '6px 12px', borderRadius: '999px', fontWeight: '900', display: 'inline-flex', alignItems: 'center', border: '1.5px solid #d8b4fe' }}>
-                            Tomar foto
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              capture="environment"
-                              style={{ display: 'none' }} 
-                              onChange={async (e) => {
-                                const archivo = e.target.files[0];
-                                if (!archivo) return;
-                                try {
-                                  alert('Subiendo foto de evidencia...');
-                                  const archivoComprimido = await comprimirImagen(archivo, 800, 0.6);
-                                  const urlPublica = await subirEvidencia(familia.nombreFamilia, tarea.id, archivoComprimido);
-                                  
-                                  await supabase.from('tareas').update({ evidencia_url: urlPublica }).eq('id', tarea.id);
-                                  const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlPublica } : t);
-                                  setTareasDeberes(actualizadas);
-                                  localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
-                                  alert('¡Foto de evidencia enviada con éxito!');
-                                } catch (err) {
-                                  alert(err.message || 'No se pudo subir la foto.');
-                                }
-                              }}
-                            />
-                          </label>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                          <span style={{ fontSize: '12px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
-                            {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
-
-          {/* CUADRO DE ACTIVIDADES RECURRENTES (FIJAS) */}
-          {tareasRecurrentes.length > 0 && (
-            <div style={{ background: '#f5f3ff', border: '1.5px solid #d8b4fe', borderRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
-              <span style={{ fontSize: '13px', fontWeight: '900', color: '#6d28d9', textAlign: 'left' }}>🔄 Actividades Recurrentes (Fijas)</span>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {tareasRecurrentes.map(tr => (
-                  <li key={tr.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e9d5ff' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#4c1d95' }}>📌 {tr.texto}</span>
-                    {esAdministrador && (
-                      <button onClick={() => eliminarTarea(tr.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer' }}>✕</button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* FORMULARIO DE ASIGNACIÓN CON OPCIÓN DE RECURRENTES Y TURNOS */}
-          <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '16px', width: '100%', boxSizing: 'border-box' }}>
-            <input
-              type="text"
-              className="input-custom"
-              placeholder={esAdministrador ? "Escribe la tarea o deber..." : "Nuevo deber personal..."}
-              value={nuevaTarea}
-              onChange={(e) => setNuevaTarea(e.target.value)}
-              style={{ width: '100%' }}
-            />
-            
-            {esAdministrador && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <select className="select-custom" value={nuevoPara} onChange={(e) => setNuevoPara(e.target.value)} style={{ flex: 1 }}>
-                    <option value="todos">Para todos los hijos</option>
-                    {listaHijosArr.map(h => <option key={h} value={h}>Para {h}</option>)}
-                  </select>
-
-                  <select className="select-custom" value={nuevoTipoAsignacion} onChange={(e) => setNuevoTipoAsignacion(e.target.value)} style={{ flex: 1 }}>
-                    <option value="normal">Normal (Semanal)</option>
-                    <option value="recurrente">Por turnos / Recurrente (Diario)</option>
-                    <option value="turnos">Por turnos (Rotativo)</option>
-                  </select>
-                </div>
+          <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {!esAdministrador && (
+              <div className="progress-track" aria-label={`Progreso ${porcentaje}%`}>
+                <div className="progress-fill" style={{ width: `${porcentaje}%` }}></div>
               </div>
             )}
 
-            <button type="submit" className="btn-add-event" style={{ width: '100%', marginTop: '4px' }}>+ Agregar Deber</button>
-          </form>
+            {esAdministrador ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
+                {listaHijosArr.length === 0 ? (
+                  <p className="duties-empty">Aún no hay hijos registrados en este hogar.</p>
+                ) : (
+                  listaHijosArr.map(hijo => {
+                    const tareasHijo = tareasDeberes.filter(t => t.para === hijo || t.para === 'todos');
+                    return (
+                      <div key={hijo} style={{ background: '#f8fafc', padding: '16px', borderRadius: '20px', border: '1.5px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '900', color: '#4338ca' }}>Deberes de</span>
+                          <span style={{ fontSize: '12px', background: '#ede9fe', color: '#7c3aed', padding: '4px 12px', borderRadius: '999px', fontWeight: '900' }}>
+                            {hijo}
+                          </span>
+                        </div>
+                        
+                        {tareasHijo.length === 0 ? (
+                          <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Sin deberes asignados</p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                            {tareasHijo.map((tarea, idx) => {
+                              const esRealizado = tarea.estado === 'realizado';
+                              const esSuTareaCreada = tarea.origen !== 'padres';
+                              const paleta10Vivos = [
+                                { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
+                                { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
+                                { bg: '#ffedd5', border: '#fb923c', top: '#ea580c' },
+                                { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' },
+                                { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' },
+                                { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' },
+                                { bg: '#ccfbf1', border: '#2dd4bf', top: '#0d9488' },
+                                { bg: '#fee2e2', border: '#f87171', top: '#dc2626' },
+                                { bg: '#fae8ff', border: '#e879f9', top: '#c026d3' },
+                                { bg: '#f1f5f9', border: '#94a3b8', top: '#475569' }
+                              ];
+                              const col = paleta10Vivos[idx % paleta10Vivos.length];
+
+                              return (
+                                <div 
+                                  key={tarea.id} 
+                                  style={{ 
+                                    width: '100%',
+                                    padding: '12px 14px', 
+                                    borderRadius: '14px', 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    gap: '4px', 
+                                    background: esRealizado ? '#f0fdf4' : col.bg, 
+                                    border: `1.5px solid ${esRealizado ? '#34d399' : col.border}`,
+                                    position: 'relative',
+                                    boxSizing: 'border-box'
+                                  }}
+                                >
+                                  {(esAdministrador || esSuTareaCreada) && (
+                                    <button 
+                                      type="button" 
+                                      className="task-delete-btn" 
+                                      onClick={() => eliminarTarea(tarea.id)} 
+                                      aria-label="Eliminar deber"
+                                      style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+
+                                  <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
+                                    {tarea.texto}
+                                  </span>
+
+                                  {/* Insignia ovalada */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
+                                      {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
+                                    </span>
+                                  </div>
+
+                                  {tarea.evidencia_url && (
+                                    <div 
+                                      onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
+                                      style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
+                                    >
+                                      <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 'bold', textDecoration: 'underline' }}>
+                                        Ver foto de evidencia
+                                      </span>
+                                      <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
+                                    </div>
+                                  )}
+
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                    <button 
+                                      type="button"
+                                      style={{
+                                        fontSize: '11.5px',
+                                        padding: '6px 14px',
+                                        borderRadius: '999px',
+                                        fontWeight: '900',
+                                        background: esRealizado ? '#e2e8f0' : '#7c3aed',
+                                        color: esRealizado ? '#475569' : '#ffffff',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                      }}
+                                      onClick={async () => {
+                                        if (!tarea.evidencia_url) {
+                                          alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
+                                          return;
+                                        }
+                                        const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
+                                        const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
+                                        setTareasDeberes(actualizadas);
+                                        localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
+                                        await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
+                                      }}
+                                    >
+                                      {esRealizado ? 'Marcar Pendiente' : 'Completar / Hecho'}
+                                    </button>
+
+                                    <span style={{ fontSize: '12px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
+                                      {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                {tareasVisibles.length === 0 ? (
+                  <p className="duties-empty">Aún no tienes deberes pendientes. ¡Buen trabajo! 🌱</p>
+                ) : (
+                  tareasVisibles.map((tarea, idx) => {
+                    const esRealizado = tarea.estado === 'realizado';
+                    const esSuTareaCreada = tarea.origen !== 'padres';
+                    const puedeBorrar = esAdministrador || esSuTareaCreada;
+                    const paleta10Vivos = [
+                      { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
+                      { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' },
+                      { bg: '#ffedd5', border: '#fb923c', top: '#ea580c' },
+                      { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' },
+                      { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' },
+                      { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' },
+                      { bg: '#ccfbf1', border: '#2dd4bf', top: '#0d9488' },
+                      { bg: '#fee2e2', border: '#f87171', top: '#dc2626' },
+                      { bg: '#fae8ff', border: '#e879f9', top: '#c026d3' },
+                      { bg: '#f1f5f9', border: '#94a3b8', top: '#475569' }
+                    ];
+                    const col = paleta10Vivos[idx % paleta10Vivos.length];
+
+                    return (
+                      <div 
+                        key={tarea.id} 
+                        style={{ 
+                          width: '100%',
+                          padding: '12px 14px', 
+                          borderRadius: '14px', 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '4px', 
+                          background: esRealizado ? '#f0fdf4' : col.bg, 
+                          border: `1.5px solid ${esRealizado ? '#34d399' : col.border}`,
+                          position: 'relative',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        {puedeBorrar && (
+                          <button 
+                            type="button" 
+                            className="task-delete-btn" 
+                            onClick={() => eliminarTarea(tarea.id)} 
+                            aria-label="Eliminar deber"
+                            style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }}
+                          >
+                            ✕
+                          </button>
+                        )}
+
+                        <span style={{ fontSize: '14.5px', fontWeight: '900', color: '#0f172a', paddingRight: '24px', lineHeight: '1.25', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
+                          {tarea.texto}
+                        </span>
+
+                        {/* Insignia ovalada */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
+                            {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
+                          </span>
+                        </div>
+
+                        {tarea.evidencia_url && (
+                          <div 
+                            onClick={() => setImagenPreviewUrl(tarea.evidencia_url)}
+                            style={{ background: '#fff', padding: '4px 8px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: '2px 0' }}
+                          >
+                            <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 'bold', textDecoration: 'underline' }}>
+                              Ver foto de evidencia
+                            </span>
+                            <img src={tarea.evidencia_url} alt="Evidencia" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button 
+                              type="button"
+                              style={{
+                                fontSize: '11.5px',
+                                padding: '6px 14px',
+                                borderRadius: '999px',
+                                fontWeight: '900',
+                                background: esRealizado ? '#e2e8f0' : '#7c3aed',
+                                color: esRealizado ? '#475569' : '#ffffff',
+                                border: 'none',
+                                cursor: 'pointer'
+                              }}
+                              onClick={async () => {
+                                if (!tarea.evidencia_url) {
+                                  alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
+                                  return;
+                                }
+                                const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
+                                const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, estado: nuevoEstado } : t);
+                                setTareasDeberes(actualizadas);
+                                localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
+                                await supabase.from('tareas').update({ estado: nuevoEstado }).eq('id', tarea.id);
+                              }}
+                            >
+                              {esRealizado ? 'Marcar Pendiente' : 'Completar / Hecho'}
+                            </button>
+
+                            <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ffffff', color: '#7c3aed', padding: '6px 12px', borderRadius: '999px', fontWeight: '900', display: 'inline-flex', alignItems: 'center', border: '1.5px solid #d8b4fe' }}>
+                              Tomar foto
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                capture="environment"
+                                style={{ display: 'none' }} 
+                                onChange={async (e) => {
+                                  const archivo = e.target.files[0];
+                                  if (!archivo) return;
+                                  try {
+                                    alert('Subiendo foto de evidencia...');
+                                    const archivoComprimido = await comprimirImagen(archivo, 800, 0.6);
+                                    const urlPublica = await subirEvidencia(familia.nombreFamilia, tarea.id, archivoComprimido);
+                                    
+                                    await supabase.from('tareas').update({ evidencia_url: urlPublica }).eq('id', tarea.id);
+                                    const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlPublica } : t);
+                                    setTareasDeberes(actualizadas);
+                                    localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
+                                    alert('¡Foto de evidencia enviada con éxito!');
+                                  } catch (err) {
+                                    alert(err.message || 'No se pudo subir la foto.');
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                            <span style={{ fontSize: '12px', fontWeight: '900', color: esRealizado ? '#059669' : '#d97706' }}>
+                              {esRealizado ? '✅ Realizado' : '⏳ Pendiente'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* FORMULARIO DE ASIGNACIÓN CON OPCIONES RECURRENTES / TURNOS */}
+            <form className="add-task-form" onSubmit={agregarTarea} style={{ marginTop: '16px', width: '100%', boxSizing: 'border-box' }}>
+              <input
+                type="text"
+                className="input-custom"
+                placeholder={esAdministrador ? "Escribe la tarea o deber..." : "Nuevo deber personal..."}
+                value={nuevaTarea}
+                onChange={(e) => setNuevaTarea(e.target.value)}
+                style={{ width: '100%' }}
+              />
+              
+              {esAdministrador && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <select className="select-custom" value={nuevoPara} onChange={(e) => setNuevoPara(e.target.value)} style={{ flex: 1 }}>
+                      <option value="todos">Para todos los hijos</option>
+                      {listaHijosArr.map(h => <option key={h} value={h}>Para {h}</option>)}
+                    </select>
+
+                    <select className="select-custom" value={tipoAsignacion} onChange={(e) => setTipoAsignacion(e.target.value)} style={{ flex: 1 }}>
+                      <option value="normal">Asignar Deber (Normal)</option>
+                      <option value="recurrente_normal">Tarea Recurrente (Fija)</option>
+                      <option value="recurrente_rotativo">Tarea por Turnos / Rotativa</option>
+                    </select>
+                  </div>
+
+                  {tipoAsignacion === 'recurrente_rotativo' && (
+                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                      <select className="select-custom" value={frecuenciaRotacion} onChange={(e) => setFrecuenciaRotacion(e.target.value)} style={{ flex: 1 }}>
+                        <option value="diaria">Rotación Diaria</option>
+                        <option value="semanal">Rotación Semanal</option>
+                      </select>
+                      <select className="select-custom" value={hijoInicioRotacion} onChange={(e) => setHijoInicioRotacion(e.target.value)} style={{ flex: 1 }}>
+                        <option value="">¿Qué hijo empieza?</option>
+                        {listaHijosArr.map(h => <option key={h} value={h}>Empieza {h}</option>)}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button type="submit" className="btn-add-event" style={{ width: '100%', marginTop: '4px' }}>+ Asignar Deber / Tarea</button>
+            </form>
+          </div>
         </div>
       )}
 
