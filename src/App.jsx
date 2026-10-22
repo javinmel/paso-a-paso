@@ -40,7 +40,7 @@ const saludos = [
 const animos = [
   'Paso a pasito, vas muy bien 🌱',
   'Hoy brillas, y se nota ✨',
-  'Lo estás haciendo genial 🌈',
+  'Lo estás haciendo genial',
   'Aquí estamos contigo 🤗',
   'Un día a la vez, tú puedes'
 ];
@@ -112,7 +112,7 @@ const recursosEmocion = {
   },
   desilusion: {
     emoji: '😞', etiqueta: 'Desilusionado',
-    titulo: 'Cuando algo no salió como esperabas',
+    titulo: 'Когда algo no salió como esperabas',
     mensaje: 'Equivocarse o que algo salga mal no define quién eres. Lo importante es que sigues intentándolo con ánimo.',
     ref: 'Salmo 55:22',
     accion: 'Piensa en algo que sí salió bien hoy, aunque sea pequeñito 🌱',
@@ -327,7 +327,7 @@ function App() {
   const porcentaje = totalTareas ? Math.round((tareasHechas / totalTareas) * 100) : 0;
   const totalCapitulos = Object.keys(capitulosCompletados).length;
   const lecturaHoy = lecturaDias.includes(fechaHoy());
-  const emojiEstado = totalTareas > 0 && tareasHechas === totalTareas ? '🏆' : tareasHechas > 0 ? '🔥' : '';
+  const emojiEstado = totalTareas > 0 && tareasHechas === totalTareas ? '🏆' : '';
   const minutosGanados = tareasHechas * MIN_POR_TAREA;
   
   const tareasOrdenadas = [
@@ -335,7 +335,6 @@ function App() {
     ...tareasVisibles.filter(t => t.estado === 'realizado')
   ];
   
-  // Eventos ordenados estrictamente por el día seleccionado
   const eventosHoy = eventosAgenda.filter(ev => ev.dia === diaSeleccionado && ev.tipo !== 'lejana');
 
   const mensajeProgreso = () => {
@@ -923,10 +922,12 @@ function App() {
           boxShadow: 'none' 
         }}>
           
-          {/* Franela Lila de extremo a extremo, plana sin encasillar */}
+          {/* Franela Lila de extremo a extremo (a 2px de cada borde de pantalla) */}
           <div style={{
             background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
-            width: '100%',
+            width: 'calc(100% + 4px)',
+            marginLeft: '-2px',
+            marginRight: '-2px',
             padding: '16px 14px',
             color: '#ffffff',
             display: 'flex',
@@ -957,6 +958,7 @@ function App() {
           </div>
 
           <div style={{ padding: '0 10px' }}>
+            {/* Cuadro de los 7 días estirado a 2px de los bordes laterales */}
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -967,7 +969,9 @@ function App() {
               overflowX: 'auto',
               border: '1.5px solid #cbd5e1',
               gap: '6px',
-              width: '100%',
+              width: 'calc(100% + 4px)',
+              marginLeft: '-2px',
+              marginRight: '-2px',
               boxSizing: 'border-box'
             }}>
               {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((d) => {
@@ -998,21 +1002,27 @@ function App() {
               })}
             </div>
 
-            {/* Cuadritos de eventos muy juntos, ordenados por día y con esquinas no redondeadas pronunciadas */}
+            {/* Cuadritos de eventos muy juntos, ordenados por día, con 10 colores vivos y tachuelas */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
               {eventosHoy.length === 0 ? (
                 <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '25px', color: '#64748b', background: '#f8fafc', borderRadius: '4px', border: '1.5px solid #cbd5e1' }}>
-                  No hay actividades programadas para este día. ¡Agrega la primera! 🌈
+                  No hay actividades programadas para este día. ¡Agrega la primera!
                 </div>
               ) : (
                 eventosHoy.map((ev, idx) => {
-                  const paletaColores = [
-                    { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' }, // Azul
+                  const paleta10Vivos = [
+                    { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' }, // Azul cielo
                     { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' }, // Lila
                     { bg: '#ffedd5', border: '#fb923c', top: '#ea580c' }, // Naranja
-                    { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' }  // Rosado
+                    { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' }, // Rosado
+                    { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' }, // Verde menta
+                    { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' }, // Amarillo
+                    { bg: '#ccfbf1', border: '#2dd4bf', top: '#0d9488' }, // Turquesa
+                    { bg: '#fee2e2', border: '#f87171', top: '#dc2626' }, // Rojo claro
+                    { bg: '#fae8ff', border: '#e879f9', top: '#c026d3' }, // Fucsia
+                    { bg: '#f1f5f9', border: '#94a3b8', top: '#475569' }  // Gris elegante
                   ];
-                  const col = paletaColores[idx % paletaColores.length];
+                  const col = paleta10Vivos[idx % paleta10Vivos.length];
 
                   return (
                     <div key={ev.id} style={{
@@ -1052,7 +1062,7 @@ function App() {
                             {ev.tipo === 'espiritual' ? 'Espiritual' : 'Hogar'}
                           </span>
                         </div>
-                        <strong style={{ display: 'block', fontSize: '14px', color: '#0f172a', marginBottom: '2px', lineHeight: '1.25', fontWeight: '900' }}>
+                        <strong style={{ display: 'block', fontSize: '14.5px', color: '#0f172a', marginBottom: '2px', lineHeight: '1.25', fontWeight: '900', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                           {ev.titulo}
                         </strong>
                       </div>
@@ -1068,18 +1078,20 @@ function App() {
               )}
             </div>
 
-            {/* SECCIÓN DE ACTIVIDADES LEJANAS HORIZONTALES (SINCRONIZADAS EN SUPABASE) */}
+            {/* SECCIÓN DE ACTIVIDADES LEJANAS HORIZONTALES (10 COLORES VIVOS) */}
             {eventosAgenda.filter(ev => ev.tipo === 'lejana').length > 0 && (
               <div style={{ marginTop: '22px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <h4 style={{ fontSize: '14px', color: '#423267', fontWeight: '900', textAlign: 'left' }}>🌟 Actividades Lejanas y Proyectos</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {eventosAgenda.filter(ev => ev.tipo === 'lejana').map((act, index) => {
-                    const coloresVivos = [
+                    const paleta10Vivos = [
                       { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' }, // Rosado
                       { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' }, // Azul
-                      { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' }  // Amarillo
+                      { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' }, // Amarillo
+                      { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' }, // Verde menta
+                      { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' }  // Lila
                     ];
-                    const col = coloresVivos[index % coloresVivos.length];
+                    const col = paleta10Vivos[index % paleta10Vivos.length];
 
                     return (
                       <div key={act.id} style={{
@@ -1096,7 +1108,7 @@ function App() {
                       }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '5px', background: col.top }} />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' }}>
-                          <strong style={{ fontSize: '14px', color: '#1f2937', fontWeight: '900' }}>{act.titulo}</strong>
+                          <strong style={{ fontSize: '14.5px', color: '#1f2937', fontWeight: '900', fontFamily: 'system-ui, -apple-system, sans-serif' }}>{act.titulo}</strong>
                           <span style={{ fontSize: '12px', color: '#374151', fontWeight: '800' }}>
                             📅 {formatearFechaAmigable(act.dia)}
                           </span>
