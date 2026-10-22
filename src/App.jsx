@@ -922,7 +922,7 @@ function App() {
           boxShadow: 'none' 
         }}>
           
-          {/* Franela Lila de extremo a extremo (a 2px de cada borde de pantalla) */}
+          {/* Franela Lila de extremo a extremo (a 2px de cada borde) */}
           <div style={{
             background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
             width: 'calc(100% + 4px)',
@@ -958,7 +958,7 @@ function App() {
           </div>
 
           <div style={{ padding: '0 10px' }}>
-            {/* Cuadro de los 7 días estirado a 2px de los bordes laterales */}
+            {/* Cuadro de los 7 días alineado de lado a lado */}
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -1002,7 +1002,7 @@ function App() {
               })}
             </div>
 
-            {/* Cuadritos de eventos muy juntos, ordenados por día, con 10 colores vivos y tachuelas */}
+            {/* Cuadritos de eventos con 10 colores vivos rotativos y tachuelas */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
               {eventosHoy.length === 0 ? (
                 <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '25px', color: '#64748b', background: '#f8fafc', borderRadius: '4px', border: '1.5px solid #cbd5e1' }}>
@@ -1062,7 +1062,7 @@ function App() {
                             {ev.tipo === 'espiritual' ? 'Espiritual' : 'Hogar'}
                           </span>
                         </div>
-                        <strong style={{ display: 'block', fontSize: '14.5px', color: '#0f172a', marginBottom: '2px', lineHeight: '1.25', fontWeight: '900', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                        <strong style={{ display: 'block', fontSize: '14px', color: '#0f172a', marginBottom: '2px', lineHeight: '1.25', fontWeight: '900', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                           {ev.titulo}
                         </strong>
                       </div>
@@ -1078,18 +1078,18 @@ function App() {
               )}
             </div>
 
-            {/* SECCIÓN DE ACTIVIDADES LEJANAS HORIZONTALES (10 COLORES VIVOS) */}
+            {/* ACTIVIDADES LEJANAS */}
             {eventosAgenda.filter(ev => ev.tipo === 'lejana').length > 0 && (
               <div style={{ marginTop: '22px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <h4 style={{ fontSize: '14px', color: '#423267', fontWeight: '900', textAlign: 'left' }}>🌟 Actividades Lejanas y Proyectos</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {eventosAgenda.filter(ev => ev.tipo === 'lejana').map((act, index) => {
                     const paleta10Vivos = [
-                      { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' }, // Rosado
-                      { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' }, // Azul
-                      { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' }, // Amarillo
-                      { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' }, // Verde menta
-                      { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' }  // Lila
+                      { bg: '#fce7f3', border: '#f43f5e', top: '#e11d48' },
+                      { bg: '#e0f2fe', border: '#38bdf8', top: '#0284c7' },
+                      { bg: '#fef9c3', border: '#facc15', top: '#ca8a04' },
+                      { bg: '#dcfce7', border: '#4ade80', top: '#16a34a' },
+                      { bg: '#f3e8ff', border: '#d8b4fe', top: '#9333ea' }
                     ];
                     const col = paleta10Vivos[index % paleta10Vivos.length];
 
@@ -1108,7 +1108,7 @@ function App() {
                       }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '5px', background: col.top }} />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' }}>
-                          <strong style={{ fontSize: '14.5px', color: '#1f2937', fontWeight: '900', fontFamily: 'system-ui, -apple-system, sans-serif' }}>{act.titulo}</strong>
+                          <strong style={{ fontSize: '14px', color: '#1f2937', fontWeight: '900', fontFamily: 'system-ui, -apple-system, sans-serif' }}>{act.titulo}</strong>
                           <span style={{ fontSize: '12px', color: '#374151', fontWeight: '800' }}>
                             📅 {formatearFechaAmigable(act.dia)}
                           </span>
