@@ -29,11 +29,12 @@ const formatearFechaAmigable = (fechaStr) => {
 };
 
 const parsearTareaTexto = (textoOriginal) => {
-  if (!textoOriginal) return { titulo: '', tipo: '', frecuencia: '', momento: '' };
+  if (!textoOriginal) return { titulo: '', tipo: '', frecuencia: '', momento: '', reqFoto: 'con_foto' };
   let titulo = textoOriginal;
   let tipo = '';
   let frecuencia = '';
   let momento = '';
+  let reqFoto = 'con_foto';
 
   if (textoOriginal.includes('|')) {
     const pedazos = textoOriginal.split('|');
@@ -46,6 +47,8 @@ const parsearTareaTexto = (textoOriginal) => {
         frecuencia = text.replace('Frecuencia:', '').trim();
       } else if (text.startsWith('Momento:')) {
         momento = text.replace('Momento:', '').trim();
+      } else if (text.startsWith('Foto:')) {
+        reqFoto = text.replace('Foto:', '').trim();
       } else if (text.includes('[Recurrente:')) {
         tipo = 'Recurrente';
         frecuencia = text.replace('[Recurrente:', '').replace(']', '').trim();
@@ -55,7 +58,7 @@ const parsearTareaTexto = (textoOriginal) => {
       }
     });
   }
-  return { titulo, tipo, frecuencia, momento };
+  return { titulo, tipo, frecuencia, momento, reqFoto };
 };
 
 const saludos = [
@@ -249,6 +252,7 @@ function App() {
   const [frecuenciaRecurrente, setFrecuenciaRecurrente] = useState('diario'); // 'diario', 'semanal'
   const [hijoInicioRotacion, setHijoInicioRotacion] = useState('');
   const [momentoDia, setMomentoDia] = useState('Mañana'); // 'Mañana', 'Tarde', 'Noche'
+  const [requiereFoto, setRequiereFoto] = useState('con_foto'); // 'con_foto', 'sin_foto'
 
   const [nuevoTitulo, setNuevoTitulo] = useState('');
   const [nuevoDia, setNuevoDia] = useState('Lunes');
@@ -445,7 +449,7 @@ function App() {
       frecuenciaStr = frecuenciaRecurrente;
     }
 
-    const textoFinal = `${nuevaTarea.trim()} | Tipo: ${tipoStr} | Frecuencia: ${frecuenciaStr} | Momento: ${momentoDia}`;
+    const textoFinal = `${nuevaTarea.trim()} | Tipo: ${tipoStr} | Frecuencia: ${frecuenciaStr} | Momento: ${momentoDia} | Foto: ${requiereFoto}`;
 
     const nuevaObj = {
       texto: textoFinal,
@@ -614,7 +618,7 @@ function App() {
                                 return (
                                   <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', background: '#fff', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                                     <span style={{ fontWeight: '800' }}>{tituloReal}</span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                       {momentoReal && (
                                         <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '800' }}>
                                           {momentoReal}
@@ -734,7 +738,7 @@ function App() {
         </>
       )}
 
-      {/* VISTA DE DEBERES / ASIGNACIÓN (PANTALLA COMPLETA LADO A LADO) */}
+      {/* VISTA DE DEBERES / ASIGNACIÓN */}
       {currentView === 'tareas' && (
         <div style={{ 
           width: 'calc(100% + 28px)', 
@@ -798,7 +802,7 @@ function App() {
                             {tareasHijo.map((tarea, idx) => {
                               const esRealizado = tarea.estado === 'realizado';
                               const esSuTareaCreada = tarea.origen !== 'padres';
-                              const { titulo: tituloReal, tipo: tipoReal, frecuencia: frecuenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
+                              const { titulo: tituloReal, tipo: tipoReal, frecuencia: frecuenciaReal, momento: momentoReal, reqFoto: reqFotoReal } = parsearTareaTexto(tarea.texto);
                               
                               const textoSegundaLinea = [
                                 momentoReal, 
@@ -863,9 +867,12 @@ function App() {
                                     </span>
                                   )}
 
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
                                     <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
                                       {tarea.origen === 'padres' ? 'Asignada por ti' : `Creada por ${hijo}`}
+                                    </span>
+                                    <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#7c3aed', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #d8b4fe', display: 'inline-block' }}>
+                                      {reqFotoReal === 'con_foto' ? 'Con foto' : 'Sin foto'}
                                     </span>
                                   </div>
 
@@ -895,8 +902,8 @@ function App() {
                                         cursor: 'pointer'
                                       }}
                                       onClick={async () => {
-                                        if (!tarea.evidencia_url) {
-                                          alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
+                                        if (reqFotoReal === 'con_foto' && !tarea.evidencia_url && !esAdministrador) {
+                                          alert('⚠️ Esta tarea requiere obligatoriamente una foto de evidencia para poder marcarse como completada.');
                                           return;
                                         }
                                         const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
@@ -932,7 +939,7 @@ function App() {
                     const esRealizado = tarea.estado === 'realizado';
                     const esSuTareaCreada = tarea.origen !== 'padres';
                     const puedeBorrar = esAdministrador || esSuTareaCreada;
-                    const { titulo: tituloReal, tipo: tipoReal, frecuencia: frecuenciaReal, momento: momentoReal } = parsearTareaTexto(tarea.texto);
+                    const { titulo: tituloReal, tipo: tipoReal, frecuencia: frecuenciaReal, momento: momentoReal, reqFoto: reqFotoReal } = parsearTareaTexto(tarea.texto);
                     
                     const textoSegundaLinea = [
                       momentoReal, 
@@ -997,9 +1004,12 @@ function App() {
                           </span>
                         )}
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
                           <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#475569', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #cbd5e1', display: 'inline-block' }}>
                             {tarea.origen === 'padres' ? 'Asignada por papá o mamá' : 'Creada por ti'}
+                          </span>
+                          <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#7c3aed', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #d8b4fe', display: 'inline-block' }}>
+                            {reqFotoReal === 'con_foto' ? 'Con foto' : 'Sin foto'}
                           </span>
                         </div>
 
@@ -1030,8 +1040,8 @@ function App() {
                                 cursor: 'pointer'
                               }}
                               onClick={async () => {
-                                if (!tarea.evidencia_url) {
-                                  alert('⚠️ Debes tomar o subir una foto de evidencia antes de poder marcar esta tarea como completada.');
+                                if (reqFotoReal === 'con_foto' && !tarea.evidencia_url) {
+                                  alert('⚠️ Esta tarea requiere obligatoriamente una foto de evidencia para poder marcarse como completada.');
                                   return;
                                 }
                                 const nuevoEstado = esRealizado ? 'pendiente' : 'realizado';
@@ -1044,32 +1054,34 @@ function App() {
                               {esRealizado ? 'Marcar Pendiente' : 'Completar / Hecho'}
                             </button>
 
-                            <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ffffff', color: '#7c3aed', padding: '6px 12px', borderRadius: '999px', fontWeight: '900', display: 'inline-flex', alignItems: 'center', border: '1.5px solid #d8b4fe' }}>
-                              Tomar foto
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                capture="environment"
-                                style={{ display: 'none' }} 
-                                onChange={async (e) => {
-                                  const archivo = e.target.files[0];
-                                  if (!archivo) return;
-                                  try {
-                                    alert('Subiendo foto de evidencia...');
-                                    const archivoComprimido = await comprimirImagen(archivo, 800, 0.6);
-                                    const urlPublica = await subirEvidencia(familia.nombreFamilia, tarea.id, archivoComprimido);
-                                    
-                                    await supabase.from('tareas').update({ evidencia_url: urlPublica }).eq('id', tarea.id);
-                                    const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlPublica } : t);
-                                    setTareasDeberes(actualizadas);
-                                    localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
-                                    alert('¡Foto de evidencia enviada con éxito!');
-                                  } catch (err) {
-                                    alert(err.message || 'No se pudo subir la foto.');
-                                  }
-                                }}
-                              />
-                            </label>
+                            {reqFotoReal === 'con_foto' && (
+                              <label style={{ cursor: 'pointer', fontSize: '11px', background: '#ffffff', color: '#7c3aed', padding: '6px 12px', borderRadius: '999px', fontWeight: '900', display: 'inline-flex', alignItems: 'center', border: '1.5px solid #d8b4fe' }}>
+                                Tomar foto
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  capture="environment"
+                                  style={{ display: 'none' }} 
+                                  onChange={async (e) => {
+                                    const archivo = e.target.files[0];
+                                    if (!archivo) return;
+                                    try {
+                                      alert('Subiendo foto de evidencia...');
+                                      const archivoComprimido = await comprimirImagen(archivo, 800, 0.6);
+                                      const urlPublica = await subirEvidencia(familia.nombreFamilia, tarea.id, archivoComprimido);
+                                      
+                                      await supabase.from('tareas').update({ evidencia_url: urlPublica }).eq('id', tarea.id);
+                                      const actualizadas = tareasDeberes.map(t => t.id === tarea.id ? { ...t, evidencia_url: urlPublica } : t);
+                                      setTareasDeberes(actualizadas);
+                                      localStorage.setItem('tareas_datos', JSON.stringify(actualizadas));
+                                      alert('¡Foto de evidencia enviada con éxito!');
+                                    } catch (err) {
+                                      alert(err.message || 'No se pudo subir la foto.');
+                                    }
+                                  }}
+                                />
+                              </label>
+                            )}
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -1126,22 +1138,32 @@ function App() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', width: '100%' }}>
-                    <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
+                  <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                    <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ flex: 1 }}>
                       <option value="Mañana">Mañana</option>
                       <option value="Tarde">Tarde</option>
                       <option value="Noche">Noche</option>
+                    </select>
+
+                    <select className="select-custom" value={requiereFoto} onChange={(e) => setRequiereFoto(e.target.value)} style={{ flex: 1 }}>
+                      <option value="con_foto">Con foto (Obligatoria)</option>
+                      <option value="sin_foto">Sin foto (Opcional)</option>
                     </select>
                   </div>
                 </div>
               )}
 
               {!esAdministrador && (
-                <div style={{ display: 'flex', width: '100%', marginTop: '6px' }}>
-                  <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ width: '100%' }}>
+                <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: '6px' }}>
+                  <select className="select-custom" value={momentoDia} onChange={(e) => setMomentoDia(e.target.value)} style={{ flex: 1 }}>
                     <option value="Mañana">Mañana</option>
                     <option value="Tarde">Tarde</option>
                     <option value="Noche">Noche</option>
+                  </select>
+
+                  <select className="select-custom" value={requiereFoto} onChange={(e) => setRequiereFoto(e.target.value)} style={{ flex: 1 }}>
+                    <option value="con_foto">Con foto (Obligatoria)</option>
+                    <option value="sin_foto">Sin foto (Opcional)</option>
                   </select>
                 </div>
               )}
